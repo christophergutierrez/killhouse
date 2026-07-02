@@ -5,6 +5,20 @@ change through a strict gauntlet: triage → grilling → PRD → spec audit →
 → TDD implementation → code-review tribunal → architecture review. Read this file first, then start
 at the entrypoint.
 
+## Installing (if the plugin isn't set up yet)
+
+If the user asks to install/set up Killhouse, follow **`skills/install-killhouse/SKILL.md`** — it
+handles the redqueen branch (include when they say "with redqueen"; ask when unspecified). The whole
+install is agent-runnable via the `claude plugin` CLI; no user-typed slash commands are needed. Cold-start
+essentials:
+
+```bash
+git clone --recursive https://github.com/christophergutierrez/killhouse.git && cd killhouse
+claude plugin marketplace add christophergutierrez/killhouse
+claude plugin install killhouse@killhouse           # skills activate next session
+# optional redqueen: cd lib/redqueen && uv sync && cd ../..
+```
+
 ## Entrypoint
 
 To run the pipeline, read and follow **`skills/ask-kh/SKILL.md`** (invocable as `/ask-kh` when the

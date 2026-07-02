@@ -1,5 +1,6 @@
 {
   "name": "killhouse",
+  "description": "The Killhouse pipeline: plan, test, and audit code through a strict multi-stage gauntlet.",
   "owner": {
     "name": "Chris Gutierrez",
     "email": "chris@gutierrez.ai"
