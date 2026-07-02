@@ -39,6 +39,16 @@ loop's contents into the main session.
 - **`loops/PLAN`** — produces `implementation-plan.md` with traceability, invariants, and
   falsifiable acceptance gates. Does not write code.
 - **`lib/redqueen`** — evolves the adversarially-robust execution prompt handed to the implementer.
+  Run it via `bin/evolve_exec_prompt.py`, which drives redqueen and writes the champion prompt to an
+  artifact (default `redqueen-exec-prompt.md`) that `IMPLEMENT_MILESTONE` reads as `REDQUEEN_PROMPT`:
+  ```bash
+  # extract from a champions.json evolved earlier (cheap; the usual path)
+  bin/evolve_exec_prompt.py --champions runs/exec/champions.json --prompt-out redqueen-exec-prompt.md
+  # or evolve fresh (needs OPENAI_BASE_URL/DRQ_MODEL; add --mock for an offline plumbing check)
+  bin/evolve_exec_prompt.py --out runs/exec --prompt-out redqueen-exec-prompt.md
+  ```
+  This stage is **optional**: if redqueen isn't set up or the prompt's fitness is `0.0`, the pipeline
+  degrades to a plain implementer prompt (no hard failure).
 - **`loops/IMPLEMENT_MILESTONE`** — TDD red-green-refactor of one milestone at a time, exiting only
   when the plan's acceptance gates pass in the terminal.
 - **`loops/CODE_REVIEW_TRIBUNAL`** — multi-specialist review; blocking findings fixed to a `PASS`.

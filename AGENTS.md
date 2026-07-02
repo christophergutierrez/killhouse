@@ -85,3 +85,33 @@ If Killhouse is pushed **before** redqueen is pushed, Killhouse will point at a 
 exist on redqueen's remote — a dangling submodule pointer that breaks clones for everyone else. As an
 agent: never commit only the Killhouse pointer for a redqueen change; either do both steps or stop and
 tell the user exactly what remains to push.
+
+## Prompt evolution (the redqueen stage)
+
+The "evolve execution prompt" stage is driven by **`bin/evolve_exec_prompt.py`**, which runs redqueen
+and writes the champion prompt to an artifact (`redqueen-exec-prompt.md` by default) that
+`loops/IMPLEMENT_MILESTONE` reads as `REDQUEEN_PROMPT`.
+
+Setup and use:
+
+```bash
+# one-time (or let `uv run` resolve deps on first call)
+cd lib/redqueen && uv sync && cd ../..
+
+# offline plumbing check — proves the wiring; fitness is 0.0, so the prompt is NOT meaningful
+bin/evolve_exec_prompt.py --mock --rounds 2 --iterations 3 --init-random 2 --batch 2 \
+  --out runs/exec --prompt-out redqueen-exec-prompt.md
+
+# real evolution — needs a model endpoint (the worker generates patches, the evolver mutates prompts)
+OPENAI_BASE_URL=http://localhost:11434/v1 DRQ_MODEL=qwen2.5-coder:32b OPENAI_API_KEY=ollama \
+  bin/evolve_exec_prompt.py --out runs/exec --prompt-out redqueen-exec-prompt.md
+
+# cheap reuse — extract the champion from an evolution you already ran
+bin/evolve_exec_prompt.py --champions runs/exec/champions.json --prompt-out redqueen-exec-prompt.md
+```
+
+This stage is **optional and self-degrading**: if the submodule isn't hydrated, `uv` isn't available,
+no endpoint is configured, or the champion's fitness is `0.0`, the adapter says so and
+`IMPLEMENT_MILESTONE` proceeds with a plain implementer prompt. A real evolution is expensive
+(many LLM calls); the intended pattern is to evolve occasionally and reuse the champion via
+`--champions`.

@@ -1,2 +1,10 @@
 # Embedding model cache
 .fastembed_cache/
+
+# redqueen evolution outputs / extracted prompt artifact
+runs/
+redqueen-exec-prompt.md
+
+# Python bytecode
+__pycache__/
+*.pyc
