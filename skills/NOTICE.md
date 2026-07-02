@@ -9,10 +9,10 @@ Vendored (and customized) here:
 | Killhouse path | Upstream source |
 | --- | --- |
 | `triage/` (SKILL.md, AGENT-BRIEF.md, OUT-OF-SCOPE.md) | `skills/engineering/triage/` |
-| `grill-with-docs.md` | `skills/engineering/grill-with-docs/SKILL.md` |
-| `grilling.md` | `skills/productivity/grilling/SKILL.md` |
+| `grill-with-docs/SKILL.md` | `skills/engineering/grill-with-docs/SKILL.md` |
+| `grilling/SKILL.md` | `skills/productivity/grilling/SKILL.md` |
 | `domain-modeling/` (SKILL.md, ADR-FORMAT.md, CONTEXT-FORMAT.md) | `skills/engineering/domain-modeling/` |
-| `to-prd.md` | `skills/engineering/to-prd/SKILL.md` |
+| `to-prd/SKILL.md` | `skills/engineering/to-prd/SKILL.md` |
 
 These copies are intentionally forked: frontmatter was switched to model-invoked so `ask-kh` can drive
 them, and a **Killhouse handoff** section was added to wire each into the pipeline. They will drift from

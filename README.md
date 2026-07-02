@@ -47,7 +47,7 @@ graph TD
 ```
 
 1. **Triage** (`skills/triage/SKILL.md`): Determines task complexity and routes trivial vs. major.
-2. **Discovery** (`skills/grill-with-docs.md` and `skills/to-prd.md`): Establishes the domain model and synthesizes the Product Requirements Document (PRD).
+2. **Discovery** (`skills/grill-with-docs/SKILL.md` and `skills/to-prd/SKILL.md`): Establishes the domain model and synthesizes the Product Requirements Document (PRD).
 3. **Spec Audit** (`loops/REVIEW_DOCUMENT.md`): A 9-subagent loop that computes arithmetic, checks assumptions, and enforces narrative flow until the PRD reaches convergence.
 4. **Planning** (`loops/PLAN.md`): Does not write code. Generates an `implementation-plan.md` with traceability matrices and falsifiable terminal gates.
 5. **Prompt Evolution** (`lib/redqueen`): The Digital Red Queen evolves the execution prompt before implementation begins.
@@ -78,7 +78,7 @@ To start a new project, major feature, or workflow-routing request:
 > /ask-kh I want to build a new feature.
 ```
 
-The agent will parse `skills/ask-kh.md` for minimal context cost and instruct you to begin with `/grill-with-docs`, launching the pipeline.
+The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost and instruct you to begin with `/grill-with-docs`, launching the pipeline.
 
 ## Operating Principles
 
