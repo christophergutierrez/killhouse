@@ -161,7 +161,8 @@ Safety is a gate, not a score. Any critical safety failure disqualifies the chan
   routing contract, unnecessary context load in the main session, a large skill with separable branches
   that should be split into focused skills, missing capability tier for a role where tier matters,
   expensive/reasoning-tier delegation for mechanical work without justification, missing model-routing
-  fallback, or wording likely to make agents over- or under-apply a stage.
+  fallback, inline work chosen without a brief justification where delegation would preserve context,
+  or wording likely to make agents over- or under-apply a stage.
 - **Minor**: Non-blocking clarity, naming consistency, discoverability, or formatting issue that does not
   change execution semantics.
 
@@ -345,6 +346,10 @@ Run what is available and record unavailable tools as risks, not silent skips.
   decisions as Blocking when that assignment could produce an unsafe pass.
 - If model routing is unavailable, the current model may run every role, but the verdict records the
   degradation rather than pretending tiering happened.
+- Prefer delegation when a task can be handed off cleanly without losing required context. Keep work
+  inline only when it is truly trivial, tightly coupled to the current reasoning, or the handoff
+  overhead is clearly higher than the work itself. Any inline assignment in a matrix or milestone
+  block should include a brief justification.
 - Example role declaration:
 
 ```markdown
@@ -428,6 +433,9 @@ and the exact pass/fail checks needed to run them later.
   total tokens, latency, retries, or errors in practice.
 - Track loaded context by tier: always-present metadata, triggered `SKILL.md`, and on-demand references
   or scripts. Metadata is the most expensive surface because it is considered before skill selection.
+- Lean toward delegation when it preserves main-session context. Inline work should be the exception
+  for trivial or tightly coupled tasks, not the default. Require a brief justification for any inline
+  decision that could have been delegated cleanly.
 - Flag repeated re-reading, repeated unchanged command runs, duplicate reviewer findings, and continued
   execution after the definition of done as thrash.
 - For any long or rigid instruction section, propose an ablation unless the section is required for a

@@ -71,6 +71,10 @@ are omitted by lighter tiers.
 12. **Separate confirmed facts, working assumptions, and decisions needing human approval.** State
     an assumption and proceed unless the answer would change architecture, public behavior,
     persisted data, security posture, ownership boundaries, or project scope; then stop and ask.
+13. **Prefer delegation when it preserves context.** Default to handing cleanly separable work to a
+    subagent. Keep work inline only when it is truly trivial, tightly coupled to the current
+    reasoning, or handoff overhead is clearly higher than the work itself. Every inline choice must
+    carry a brief justification.
 
 ---
 
@@ -82,7 +86,10 @@ are omitted by lighter tiers.
   approval.
 
 Run roles as parallel subagents when supported; otherwise run each inline as a labeled pass. Tier
-labels remain as documented intent when one model performs every role.
+labels remain as documented intent when one model performs every role. Prefer delegation when a
+role can be handed off cleanly; mark inline only when the work is trivial, tightly coupled to the
+current reasoning, or handoff overhead clearly exceeds the work. Every inline choice must be
+justified in the matrix or milestone block.
 
 **Reviewer independence**: reviewers receive the plan and evidence, never each other's findings.
 Findings stay raw until Lead Planner synthesis. When roles run inline, complete and record each
@@ -475,7 +482,7 @@ Cheap per-pass subset: <ids>. Full suite at: phase-end / final.
 - gate_failure_reasoning / invariants_at_risk / evidence_to_record / rollback_unit / stop_conditions
 
 ## Subagent Matrix
-| Work item | Role | Tier | Parallelizable | Inputs | Required output |
+| Work item | Role | Tier | Delegate? | Why | Inputs | Required output |
 
 ## Consolidated Verification
 Proves: new behavior works; obsolete assets and references gone; affected tests pass; unrelated

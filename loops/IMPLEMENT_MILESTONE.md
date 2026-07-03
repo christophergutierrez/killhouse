@@ -179,6 +179,9 @@ gate — surface it as a defect against the plan.
   terminal output.
 - **No scope laundering.** Do not satisfy a gate by editing outside `implementation_scope`, weakening a
   test, or hard-coding a gate's expected output. Any of these voids the milestone.
+- **Commit before handoff.** When the milestone is complete, commit the related code with a descriptive
+  message before handing state to `CODE_REVIEW_TRIBUNAL.md`. Keep the commit scoped to the milestone's
+  changes and do not bundle unrelated work.
 - **Per-slice rollback.** A failed slice rolls back only that slice's changes; previously green slices
   remain. A failed milestone rolls back to `rollback_unit`.
 - **Attempt cap.** Each slice gets `MAX_ATTEMPTS` green attempts; the milestone gets `MAX_SLICES` slices.

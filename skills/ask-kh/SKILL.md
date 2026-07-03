@@ -131,6 +131,9 @@ budget-guard halt (Autopilot stop condition 4):
   back to replan, a tribunal `FAIL` that reopens implementation) beyond this forces a stop.
 - `token_budget` (optional) — if the runtime exposes usage, stop and report when the run crosses it.
 
+Checkpoint mode is often the right choice when a run spans several sessions or the user wants to stay
+under a session budget; pausing at a checkpoint can keep the work from getting stranded midstream.
+
 On any budget trip, **degrade to Checkpoint mode and ask** whether to continue — do not silently halt the
 work, and do not silently keep spending. Record what tripped in `budget` state.
 
