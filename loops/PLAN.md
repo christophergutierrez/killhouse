@@ -56,13 +56,19 @@ are omitted by lighter tiers.
    dependency, doc, or term may survive final verification unless explicitly preserved.
 5. **Every milestone yields an observable repository state** with an objective, falsifiable gate.
    "Investigate", "clean up", and "make it work" are activities, not milestones.
-6. **A gate you cannot make fail is documentation, not a gate** (sec 8).
-7. **An unwritable gate is an unknown, not a milestone**; convert it to a spike (sec 9).
-8. **A fact without a citation is an assumption** (sec 12, Evidence Contract).
-9. **Resolve reviewer conflicts by principle, not vibes** (sec 11.1).
-10. **Preserve unrelated work.** Record existing user changes; never plan rollbacks that would
+6. **Tracer bullet first.** For any multi-layer feature, the first non-spike milestone must be a thin,
+   runnable end-to-end slice through every layer needed for the user-visible path. It may be ugly,
+   narrow, and incomplete, but it must pass a real gate from the highest practical seam before any
+   single layer is fleshed out. Backend-only, UI-only, schema-only, or infrastructure-only milestones
+   may precede it only when they are explicit spikes, characterization, or unavoidable prerequisites,
+   and the plan must say why.
+7. **A gate you cannot make fail is documentation, not a gate** (sec 8).
+8. **An unwritable gate is an unknown, not a milestone**; convert it to a spike (sec 9).
+9. **A fact without a citation is an assumption** (sec 12, Evidence Contract).
+10. **Resolve reviewer conflicts by principle, not vibes** (sec 11.1).
+11. **Preserve unrelated work.** Record existing user changes; never plan rollbacks that would
     discard them.
-11. **Separate confirmed facts, working assumptions, and decisions needing human approval.** State
+12. **Separate confirmed facts, working assumptions, and decisions needing human approval.** State
     an assumption and proceed unless the answer would change architecture, public behavior,
     persisted data, security posture, ownership boundaries, or project scope; then stop and ask.
 
@@ -330,7 +336,8 @@ Ids are content-based and stable across passes (keyed to the conceptual flaw, no
 
 **Blocking**: unsafe execution; removal with no non-vacuous absence invariant; a gate that cannot
 be proven to fail on a contract or persisted-data milestone; deletion without characterization; an
-orphan milestone with no outcome parent; a cold-start gap on a REQUEST outcome; a contradictory
+orphan milestone with no outcome parent; a multi-layer plan whose first non-spike milestone is
+horizontal instead of a runnable tracer bullet; a cold-start gap on a REQUEST outcome; a contradictory
 dependency; an incorrect low tier; a required human decision.
 **Material**: vague or unproven gate; gate lacking a recorded baseline without a reason; fact
 without citation presented as confirmed; understated blast radius; unspecified subagent contract;
@@ -354,6 +361,10 @@ halts the loop with verdict `BLOCKED` and the contested items listed.
 2. **Decompose** *(full)*. Produce atomic outcomes + non-goals (sec 5).
 3. **Draft.** Lead Planner produces a plan per sec 18, including the traceability matrix
    (standard+) and invariants with baseline polarity and evidence.
+   For multi-layer work, sequence the first non-spike milestone as the tracer bullet required by
+   sec 2: a thin, runnable end-to-end path with a highest-practical-seam gate. If a prerequisite
+   must come first, mark it as `tracer_bullet: prerequisite` and cite why the tracer bullet cannot
+   run before it.
    Apply the Ponytail simplification check to each milestone before review: if the milestone exists
    only for hypothetical future need, duplicates a repo pattern, adds an avoidable dependency, or
    uses a broader implementation than the requested outcome needs, shrink or remove it before
@@ -458,6 +469,7 @@ Cheap per-pass subset: <ids>. Full suite at: phase-end / final.
 
 #### Milestone: <stable-slug>
 - outcome (observable, not an activity) / traces_to (standard+) / implementation_scope / dependencies
+- tracer_bullet: yes | no | prerequisite | not_applicable, with rationale
 - subagent_work: role, tier, scope, inputs, required output
 - acceptance_gates: exact commands + expected results + baseline_polarity + post_condition + evidence
 - gate_failure_reasoning / invariants_at_risk / evidence_to_record / rollback_unit / stop_conditions
