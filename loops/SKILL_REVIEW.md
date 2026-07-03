@@ -170,6 +170,28 @@ Safety is a gate, not a score. Any critical safety failure disqualifies the chan
 Use subagents when the runtime supports them. Run reviewers independently and in parallel where possible.
 If subagents are unavailable, run each role inline as a labeled pass.
 
+Default capability tiers:
+
+| Role | Tier | Why |
+| --- | --- | --- |
+| Invocation & Routing Reviewer | `fast` | Path, command, link, and artifact checks are bounded inventory work. |
+| Runtime Compatibility Reviewer | `standard` | Requires comparing runtime contracts and examples across files. |
+| Instruction Conflict Reviewer | `reasoning` | Must reconcile contradictory instructions, autonomy, budgets, and gates. |
+| Gate & Safety Reviewer | `reasoning` | Must judge whether mandatory gates remain non-vacuous and fail-safe. |
+| Active-Doc Clarity Reviewer | `standard` | Requires executable-instruction review but not final safety judgment. |
+| Context & Output Contract Reviewer | `standard` | Requires routing and handoff analysis across instruction surfaces. |
+| Novelty & Progressive Disclosure Reviewer | `standard` | Requires value and context-placement judgment. |
+| Composability & Decomposition Reviewer | `reasoning` | Must judge boundaries, ownership, and skill-splitting tradeoffs. |
+| Capability Tiering Reviewer | `reasoning` | Must judge underpowered safety work and overpowered mechanical work. |
+| Manifest & Install Reviewer | `fast` | JSON, manifest, install, and validator checks are mostly mechanical. |
+| Scripts & References Reviewer | `standard` | Requires dependency, determinism, and reference-path judgment. |
+| Eval Readiness Reviewer | `standard` | Requires scenario design and pass/fail-contract analysis. |
+| Efficiency & Ablation Reviewer | `standard` | Requires cost/value judgment and ablation proposal. |
+| Synthesis Editor | `reasoning` | Owns severity calibration, deduplication, final verdict, and accepted risks. |
+
+Fallback for every role: if model routing is unavailable, run the role with the current model and record
+`capability_tiering: current-model-only` in the verdict.
+
 - **Invocation & Routing Reviewer**: Verifies every slash command, skill name, loop name, relative link,
   and artifact path resolves to an actual file or documented runtime command.
 - **Runtime Compatibility Reviewer**: Checks Claude Code, Codex, and generic file-reading behavior. Flags

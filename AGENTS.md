@@ -32,6 +32,11 @@ To run the pipeline, read and follow **`skills/ask-kh/SKILL.md`**. In Claude Cod
 stateful driver: it classifies the request, routes it through the stages, and holds the autonomy
 setting (Checkpoint vs Autopilot).
 
+For changes to active agent-instruction documents rather than application code, run
+**`loops/SKILL_REVIEW.md`**. Use it for `skills/**/SKILL.md`, `loops/**/*.md`, `AGENTS.md`,
+`README.md`, plugin manifests, marketplace manifests, install docs, and any document an agent is
+expected to execute as instructions.
+
 ## How references resolve
 
 The skills invoke each other and the loops by name. Resolve them as files:
@@ -39,7 +44,7 @@ The skills invoke each other and the loops by name. Resolve them as files:
 - `/triage`, `/grill-with-docs`, `/grilling`, `/domain-modeling`, `/to-prd`, `/ask-kh`
   → `skills/<name>/SKILL.md`
 - A loop stage named in caps (e.g. `REVIEW_DOCUMENT`, `PLAN`, `IMPLEMENT_MILESTONE`,
-  `CODE_REVIEW_TRIBUNAL`, `ARCHITECTURE_DESIGN`) → `loops/<NAME>.md`
+  `CODE_REVIEW_TRIBUNAL`, `ARCHITECTURE_DESIGN`, `SKILL_REVIEW`) → `loops/<NAME>.md`
 - The prompt-evolution engine → `lib/redqueen` (a git submodule; see below)
 
 If your runtime supports Claude Code plugins, the skills register as real slash commands via

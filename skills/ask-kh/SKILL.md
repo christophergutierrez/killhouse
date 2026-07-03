@@ -14,6 +14,17 @@ Every stage is a pointer. `ask-kh` invokes lightweight skills for the front end 
 supports it, spawns subagents that read the heavy `loops/` payloads for the rigorous middle. It never
 inlines a loop's contents into the main session.
 
+## Instruction-document changes
+
+If the request is primarily about changing active agent-instruction documents, route to
+`loops/SKILL_REVIEW.md` instead of the code-change pipeline. This includes `skills/**/SKILL.md`,
+`loops/**/*.md`, `AGENTS.md`, `README.md`, plugin manifests, marketplace manifests, install docs, and
+any document an agent is expected to execute as instructions.
+
+Use the normal code-change gauntlet only when the instruction-document change is part of a broader
+application-code change. In that case, run `SKILL_REVIEW` on the instruction surfaces before declaring
+the pipeline done.
+
 ## The pipeline
 
 ```
