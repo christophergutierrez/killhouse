@@ -6,6 +6,47 @@ Killhouse is an orchestration hub for AI coding agents. It solves "Skill Hell" a
 
 Instead of loading massive prompts into your main agent session—which burns tokens and degrades reasoning—Killhouse separates the *triggers* from the *payloads*. Lightweight skills act as pointers in your main chat, spawning independent, heavy subagents to handle rigorous Software Development Life Cycle (SDLC) loops.
 
+## Quickstart
+
+Requires [Claude Code](https://docs.claude.com/en/docs/claude-code) v2.1+.
+
+**The lazy way — let an agent do it.** In Claude Code, just say:
+
+```text
+> install killhouse from github.com/christophergutierrez/killhouse
+```
+
+Add "with redqueen" to include the prompt-evolution engine. The agent runs the `claude plugin` CLI for you.
+
+**The fastest path — install it yourself (no clone needed).** In a terminal:
+
+```bash
+claude plugin marketplace add christophergutierrez/killhouse
+claude plugin install killhouse@killhouse
+```
+
+Then start a fresh Claude Code session (skills activate next session) and kick off the pipeline:
+
+```text
+> /ask-kh I want to build a new feature.
+```
+
+**Optional — add redqueen (the prompt-evolution engine).** Skip this to just try the pipeline; the
+"evolve execution prompt" stage auto-degrades to a plain prompt when redqueen isn't present. Requires
+[`uv`](https://docs.astral.sh/uv/):
+
+```bash
+git clone --recursive https://github.com/christophergutierrez/killhouse.git
+cd killhouse/lib/redqueen && uv sync && cd ../..
+
+# prove it works offline (mock fitness is 0.0 by design)
+bin/evolve_exec_prompt.py --mock --rounds 2 --iterations 3 --init-random 2 --batch 2 \
+  --out runs/exec --prompt-out redqueen-exec-prompt.md
+```
+
+For a *meaningful* evolved prompt, point it at a local model (`OPENAI_BASE_URL` + `DRQ_MODEL`) and run
+without `--mock`. To remove Killhouse later: `claude plugin uninstall killhouse`.
+
 ## The Architecture
 
 ```text
@@ -55,24 +96,9 @@ graph TD
 7. **Code Review** (`loops/CODE_REVIEW_TRIBUNAL.md`): A multi-agent gatekeeper routing files to specialists—Language, Security, Tests, Docs, and a Ponytail simplification reviewer—synthesized by an architect to converge on a `PASS` verdict.
 8. **Architecture Review** (`loops/ARCHITECTURE_DESIGN.md`): The final health check to eliminate shallow modules, leaky boundaries, and domain-language disconnects.
 
-## Installation
-
-Because Killhouse relies on executable submodules like the Digital Red Queen (`redqueen`), you must clone it recursively.
-
-```bash
-# Clone the repository and fetch all submodules
-git clone --recursive https://github.com/christophergutierrez/killhouse.git
-
-# Initialize the Python environment for executable dependencies
-cd killhouse/lib/redqueen
-uv sync
-```
-
 ## Usage
 
-Point your terminal-based agent to the `skills/` directory.
-
-To start a new project, major feature, or workflow-routing request:
+Once the plugin is installed (see [Quickstart](#quickstart)), start any new project, major feature, or workflow-routing request with:
 
 ```text
 > /ask-kh I want to build a new feature.
