@@ -33,6 +33,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 # killhouse/bin/evolve_exec_prompt.py -> killhouse/lib/redqueen
 REDQUEEN_DIR = Path(__file__).resolve().parent.parent / "lib" / "redqueen"
@@ -74,15 +75,40 @@ def run_evolve(args: argparse.Namespace) -> Path:
     return out_dir / "champions.json"
 
 
-def best_champion(champions_path: Path) -> dict:
+def die(code: int, message: str) -> None:
+    print(message, file=sys.stderr)
+    sys.exit(code)
+
+
+def is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def usable_champion(candidate: Any) -> dict[str, Any] | None:
+    if not isinstance(candidate, dict):
+        return None
+    fitness = candidate.get("fitness")
+    round_number = candidate.get("round")
+    genome = candidate.get("genome")
+    if not is_number(fitness) or not is_number(round_number) or not isinstance(genome, str):
+        return None
+    if not genome.strip():
+        return None
+    return candidate
+
+
+def best_champion(champions_path: Path) -> dict[str, Any]:
     try:
         champions = json.loads(champions_path.read_text())
     except (OSError, json.JSONDecodeError) as e:
-        sys.exit(f"[error] cannot read champions file {champions_path}: {e}")
-    if not champions:
-        sys.exit(3)
+        die(2, f"[error] cannot read champions file {champions_path}: {e}")
+    if not isinstance(champions, list):
+        die(2, f"[error] champions file {champions_path} must contain a JSON list")
+    usable = [champ for candidate in champions if (champ := usable_champion(candidate)) is not None]
+    if not usable:
+        die(3, f"[warn] no usable champion found in {champions_path}")
     # highest fitness; tie-break on latest round so a later, equally-fit prompt wins
-    return max(champions, key=lambda c: (c.get("fitness", 0.0), c.get("round", 0)))
+    return max(usable, key=lambda c: (c["fitness"], c["round"]))
 
 
 def main() -> None:

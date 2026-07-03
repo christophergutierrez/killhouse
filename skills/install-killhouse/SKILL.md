@@ -26,11 +26,15 @@ include it from the user's phrasing:
 - If you are already inside a Killhouse checkout (`.claude-plugin/`, `.codex-plugin/`, and `AGENTS.md`
   are present),
   use it. If redqueen is wanted, ensure the submodule is hydrated: `git submodule update --init --recursive`.
-- Otherwise clone it. Use `--recursive` whenever redqueen is wanted (harmless otherwise):
+- Otherwise clone it when you need a local checkout for Codex marketplace registration, generic
+  file-reading use, validation, or redqueen setup. Use `--recursive` whenever redqueen is wanted
+  (harmless otherwise):
   ```bash
   git clone --recursive https://github.com/christophergutierrez/killhouse.git
   cd killhouse
   ```
+- Claude Code marketplace installs can install from the configured remote marketplace without a local
+  checkout. If the user only wants that path and redqueen is not being set up, Step 1 may be skipped.
 
 ## Step 2 — Register the plugin (always)
 
@@ -50,14 +54,18 @@ claude plugin install killhouse@killhouse
 
 ### Codex
 
-Install from a Codex marketplace entry that points at this repository or checkout:
+Install from a Codex marketplace source that points at this repository or checkout:
 
 ```bash
-codex plugin add killhouse@<marketplace-name>
+codex plugin marketplace add .
+codex plugin list
+codex plugin add killhouse@<marketplace-name-shown-by-list>
 ```
 
-- For a local checkout that is not already in a marketplace, add or update the appropriate Codex
-  marketplace entry first, then install from that marketplace.
+- For a Git source, use `codex plugin marketplace add christophergutierrez/killhouse` or the HTTPS/SSH
+  Git URL, then install `killhouse` from the marketplace name shown by `codex plugin list`.
+- If the marketplace source is already configured, skip the `marketplace add` step and install from the
+  existing marketplace.
 - Confirm with `codex plugin list` (expect `killhouse` from the selected marketplace).
 - **The skills activate in a new thread** — tell the user to start a fresh Codex thread before asking
   for the `ask-kh` skill.

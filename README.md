@@ -28,7 +28,7 @@ Requires [Claude Code](https://docs.claude.com/en/docs/claude-code) v2.1+.
 
 Add "with redqueen" to include the prompt-evolution engine. The agent runs the `claude plugin` CLI for you.
 
-**The fastest path — install it yourself (no clone needed).** In a terminal:
+**The fastest path - install it yourself from the Claude marketplace.** In a terminal:
 
 ```bash
 claude plugin marketplace add christophergutierrez/killhouse
@@ -43,11 +43,15 @@ Then start a fresh Claude Code session (skills activate next session) and kick o
 
 ### Codex
 
-Install Killhouse from a Codex marketplace entry that points at this repository, or add the checked-out
-plugin to a local Codex marketplace and install it with:
+Install Killhouse from a Codex marketplace source that points at this repository. For a local checkout,
+first register that checkout as a marketplace source, then install the plugin from it:
 
 ```bash
-codex plugin add killhouse@<marketplace-name>
+git clone --recursive https://github.com/christophergutierrez/killhouse.git
+cd killhouse
+codex plugin marketplace add .
+codex plugin list
+codex plugin add killhouse@<marketplace-name-shown-by-list>
 ```
 
 Then start a fresh Codex thread so the skills are loaded. Kick off the pipeline by asking Codex to use
@@ -60,7 +64,7 @@ the `ask-kh` skill:
 If the plugin is not installed, tell Codex to read `skills/ask-kh/SKILL.md` directly; all stages resolve
 to files in this repository.
 
-**Optional — add redqueen (the prompt-evolution engine).** Skip this to just try the pipeline; the
+**Optional - add redqueen (the prompt-evolution engine).** Skip this to just try the pipeline; the
 "evolve execution prompt" stage auto-degrades to a plain prompt when redqueen isn't present. Requires
 [`uv`](https://docs.astral.sh/uv/):
 
@@ -124,7 +128,7 @@ graph TD
 4. **Planning** (`loops/PLAN.md`): Does not write code. Generates an `implementation-plan.md` with traceability matrices and falsifiable terminal gates.
 5. **Prompt Evolution** (`lib/redqueen`): The Digital Red Queen evolves the execution prompt before implementation begins.
 6. **Execution** (`loops/IMPLEMENT_MILESTONE.md`): TDD-driven execution of the plan's vertical slices.
-7. **Code Review** (`loops/CODE_REVIEW_TRIBUNAL.md`): A multi-agent gatekeeper routing files to specialists—Language, Security, Tests, Docs, and a Ponytail simplification reviewer—synthesized by an architect to converge on a `PASS` verdict.
+7. **Code Review** (`loops/CODE_REVIEW_TRIBUNAL.md`): A multi-agent gatekeeper routing files to specialists: Language, Security, Tests, Docs, and a Ponytail simplification reviewer. The Ponytail reviewer looks only for unnecessary complexity that can be deleted, reused, or replaced by existing platform behavior without weakening safety. An architect synthesizes the findings into a `PASS` verdict.
 8. **Architecture Review** (`loops/ARCHITECTURE_DESIGN.md`): The final health check to eliminate shallow modules, leaky boundaries, and domain-language disconnects.
 
 ## Usage
@@ -141,8 +145,9 @@ In Codex, ask for the same skill by name:
 > Use ask-kh for this feature: I want to build a new feature.
 ```
 
-The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost and instruct you to begin with
-`/grill-with-docs` in Claude Code, or the `grill-with-docs` skill in Codex, launching the pipeline.
+The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost, classify the request through
+`/triage` in Claude Code or the `triage` skill in Codex, and then route either to the trivial fast path
+or the full grilling-to-implementation pipeline.
 
 ## Operating Principles
 

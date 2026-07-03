@@ -1,23 +1,23 @@
 ---
 name: to-prd
-description: Synthesize a completed grilling conversation into a PRD — no interview, just synthesis of what you've already discussed. Use after the Killhouse post-grill gate, when the idea is aligned and you need a written spec to hand to the spec-audit loop.
+description: Synthesize a completed grilling conversation into a PRD. Do not interview or publish to an issue tracker; write the PRD artifact from existing context and hand it to the spec-audit loop.
 ---
 
-This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user — just synthesize what you already know.
+This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user; synthesize what you already know. If a decision is missing, record it as an assumption or open question in the PRD instead of stopping to ask.
 
 The issue tracker and triage label vocabulary should have been provided by the repository's own docs or
-prior Killhouse stages. If they are absent, record that as an assumption or gap in the PRD; do not invoke
-external setup commands from the vendored upstream skill set.
+prior Killhouse stages. In the Killhouse pipeline, do not publish to an issue tracker and do not apply
+triage labels; the PRD artifact is the handoff.
 
 ## Process
 
 1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
 
-2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
+2. Sketch out the seams at which the feature should be tested. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
 
-Check with the user that these seams match their expectations.
+Record seam assumptions explicitly. Do not check with the user during this skill; the post-grill gate is the last interactive alignment point before PRD synthesis.
 
-3. Write the PRD using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
+3. Write the PRD using the template below. Save it as a PRD artifact or return the artifact path if the runtime already has one. Do not publish it to an issue tracker and do not mutate labels.
 
 <prd-template>
 
@@ -73,15 +73,19 @@ A description of the things that are out of scope for this PRD.
 
 Any further notes about the feature.
 
+## Assumptions and Open Questions
+
+Known assumptions made during synthesis, plus any open questions the spec-audit loop or `ask-kh` must
+surface before implementation if they are material.
+
 </prd-template>
 
 ## Killhouse handoff
 
 > Vendored from `mattpocock/skills` (MIT — see `skills/THIRD-PARTY-LICENSE-mattpocock.txt`) and adapted for Killhouse; customize freely.
 
-Reach this stage only through the post-grill gate — a PRD written before the grilling converges encodes the
-misalignment the grilling exists to remove. In Killhouse, the finished PRD is **not** published to an issue
-tracker (step 3's tracker/label step is Matt's base, to be customized): the PRD is the document handed to
+Reach this stage only through the post-grill gate. A PRD written before grilling converges encodes the
+misalignment the grilling exists to remove. The finished PRD is the document handed to
 `loops/REVIEW_DOCUMENT` (the 9-subagent spec audit), which converges it before `loops/PLAN`. Control returns
-to `ask-kh`, which — per the run's autonomy setting — either advances directly into the spec audit (Autopilot)
-or stops at the checkpoint first (Checkpoint mode).
+to `ask-kh`, which either advances directly into the spec audit in Autopilot or stops at the checkpoint first
+in Checkpoint mode.

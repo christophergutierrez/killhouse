@@ -19,8 +19,10 @@ git clone --recursive https://github.com/christophergutierrez/killhouse.git && c
 claude plugin marketplace add christophergutierrez/killhouse
 claude plugin install killhouse@killhouse           # skills activate next session
 
-# Codex (from a configured marketplace entry that points at this checkout/repo)
-codex plugin add killhouse@<marketplace-name>       # skills activate next thread
+# Codex (from a local marketplace source that points at this checkout)
+codex plugin marketplace add .
+codex plugin list
+codex plugin add killhouse@<marketplace-name-shown-by-list>  # skills activate next thread
 
 # optional redqueen: cd lib/redqueen && uv sync && cd ../..
 ```

@@ -1,0 +1,106 @@
+{
+  "scenarios": [
+    {
+      "id": "claude-ask-kh-starts-at-triage",
+      "group": "dev",
+      "description": "Claude Code users keep slash-command entrypoints and ask-kh routes through triage.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "README.md",
+          "text": "> /ask-kh I want to build a new feature."
+        },
+        {
+          "type": "contains",
+          "path": "README.md",
+          "text": "classify the request through\n`/triage`"
+        }
+      ]
+    },
+    {
+      "id": "codex-ask-kh-skill-name",
+      "group": "dev",
+      "description": "Codex users invoke ask-kh by skill name and get a concrete marketplace setup path.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "README.md",
+          "text": "Use ask-kh for this feature"
+        },
+        {
+          "type": "contains",
+          "path": "README.md",
+          "text": "codex plugin marketplace add ."
+        }
+      ]
+    },
+    {
+      "id": "instruction-documents-route-to-skill-review",
+      "group": "dev",
+      "description": "Instruction-document changes are routed to SKILL_REVIEW instead of ordinary code execution.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "AGENTS.md",
+          "text": "loops/SKILL_REVIEW.md"
+        },
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/SKILL.md",
+          "text": "Instruction-document changes"
+        }
+      ]
+    },
+    {
+      "id": "review-document-has-lean-verdict-handoff",
+      "group": "dev",
+      "description": "Spec audit returns an artifact/verdict handoff without transcript bloat.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "loops/REVIEW_DOCUMENT.md",
+          "text": "verdict: CONVERGED | OPEN_QUESTIONS | MAX_ROUNDS | BLOCKED"
+        },
+        {
+          "type": "contains",
+          "path": "loops/REVIEW_DOCUMENT.md",
+          "text": "Never return reviewer transcripts or raw round output"
+        }
+      ]
+    },
+    {
+      "id": "to-prd-does-not-mutate-tracker",
+      "group": "held_out",
+      "description": "PRD synthesis records gaps instead of interviewing or publishing to a tracker.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "skills/to-prd/SKILL.md",
+          "text": "Do not check with the user during this skill"
+        },
+        {
+          "type": "not_contains",
+          "path": "skills/to-prd/SKILL.md",
+          "text": "publish it to the project issue tracker"
+        }
+      ]
+    },
+    {
+      "id": "child-skill-handoffs-have-file-fallbacks",
+      "group": "held_out",
+      "description": "Child skill handoffs preserve Claude slash commands and add Codex/generic fallbacks.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "skills/grill-with-docs/SKILL.md",
+          "text": "skills/grilling/SKILL.md"
+        },
+        {
+          "type": "contains",
+          "path": "skills/triage/SKILL.md",
+          "text": "skills/grill-with-docs/SKILL.md"
+        }
+      ]
+    }
+  ]
+}

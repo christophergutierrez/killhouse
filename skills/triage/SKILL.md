@@ -76,7 +76,11 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 3. **Verify the claim.** Before any grilling, check that the claim holds up. For a bug, reproduce it from the reporter's steps. For a PR, confirm the diff does what it claims — check it out, run the relevant tests or commands. Report what happened: confirmed (with code path), failed, or insufficient detail (a strong `needs-info` signal). A confirmed verification makes a much stronger agent brief.
 
-4. **Grill (if needed).** If the request needs fleshing out, run the `/grilling` and `/domain-modeling` skills together — grill it into shape one question at a time, sharpening domain terms and updating `CONTEXT.md`/ADRs inline as decisions land.
+4. **Grill (if needed).** If the request needs fleshing out, run the `/grilling` and `/domain-modeling`
+   skills together in Claude Code. In Codex or a generic file-reading runtime, invoke `grilling` and
+   `domain-modeling` by skill name, or read `skills/grilling/SKILL.md` and
+   `skills/domain-modeling/SKILL.md` directly. Grill it into shape one question at a time, sharpening
+   domain terms and updating `CONTEXT.md`/ADRs inline as decisions land.
 
 5. **Apply the outcome:**
    - `ready-for-agent` — post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).
@@ -124,7 +128,8 @@ Within the Killhouse pipeline, triage's job is the routing decision `ask-kh` con
   minimal milestone (outcome + one acceptance gate). Skip grilling, PRD, and planning.
 - **Major** — anything touching a public contract, persisted data, migrations, security/auth/billing,
   unclear scope, or more than a handful of files. Enter the full flow at `/grill-with-docs` in Claude
-  Code, or the `grill-with-docs` skill in Codex.
+  Code, the `grill-with-docs` skill in Codex, or `skills/grill-with-docs/SKILL.md` for a generic
+  file-reading agent.
 
 The issue-tracker state machine above is Matt's base — Killhouse's pipeline drives `PLAN`/`IMPLEMENT_MILESTONE`
 rather than an issue tracker, so treat the tracker roles as optional intake and keep the trivial/major call

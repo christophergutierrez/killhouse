@@ -3,7 +3,9 @@ name: grill-with-docs
 description: Front-load alignment for a major change through a relentless interview that also builds docs (ADRs and a glossary) as you go. Use at the start of the Killhouse flow, after triage classifies a request as major, to capture everything the pipeline needs to run unattended.
 ---
 
-Run a `/grilling` session, using the `/domain-modeling` skill.
+Run a `/grilling` session, using the `/domain-modeling` skill. In Codex or a generic file-reading
+runtime, invoke the `grilling` and `domain-modeling` skills by name, or read
+`skills/grilling/SKILL.md` and `skills/domain-modeling/SKILL.md` directly.
 
 ## Killhouse handoff
 
@@ -20,4 +22,5 @@ and ask the two questions that set the rest of the run:
 1. **Ready for the PRD?** (or another grilling pass)
 2. **Checkpoint or Autopilot?** (stop at each stage, or run to completion)
 
-On "ready + mode chosen," `ask-kh` advances to `/to-prd` in Claude Code, or the `to-prd` skill in Codex.
+On "ready + mode chosen," `ask-kh` advances to `/to-prd` in Claude Code, the `to-prd` skill in Codex,
+or `skills/to-prd/SKILL.md` for a generic file-reading agent.
