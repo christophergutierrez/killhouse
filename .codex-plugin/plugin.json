@@ -1,0 +1,36 @@
+{
+  "name": "killhouse",
+  "version": "0.1.0",
+  "description": "A rigorous, unforgiving AI pipeline where code is planned, tested, and audited without mercy.",
+  "author": {
+    "name": "Chris Gutierrez",
+    "email": "chris@gutierrez.ai"
+  },
+  "homepage": "https://github.com/christophergutierrez/killhouse",
+  "repository": "https://github.com/christophergutierrez/killhouse",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "workflow",
+    "software-engineering",
+    "tdd",
+    "code-review"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Killhouse",
+    "shortDescription": "Run code changes through a strict planning, TDD, and review pipeline.",
+    "longDescription": "Killhouse orchestrates triage, grilling, PRD writing, spec audit, planning, prompt evolution, TDD implementation, code review, and architecture review for AI coding agents.",
+    "developerName": "Chris Gutierrez",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use Killhouse for this feature",
+      "Run this change through ask-kh",
+      "Plan and implement this with Killhouse"
+    ]
+  }
+}

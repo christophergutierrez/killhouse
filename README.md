@@ -8,6 +8,16 @@ Instead of loading massive prompts into your main agent session—which burns to
 
 ## Quickstart
 
+Killhouse ships plugin manifests for both Claude Code and Codex:
+
+- Claude Code: `.claude-plugin/plugin.json`
+- Codex: `.codex-plugin/plugin.json`
+
+The pipeline itself is plain Markdown. If a runtime can read files, run shell commands, and follow
+`SKILL.md` instructions, it can run Killhouse even without first-class plugin support.
+
+### Claude Code
+
 Requires [Claude Code](https://docs.claude.com/en/docs/claude-code) v2.1+.
 
 **The lazy way — let an agent do it.** In Claude Code, just say:
@@ -31,6 +41,25 @@ Then start a fresh Claude Code session (skills activate next session) and kick o
 > /ask-kh I want to build a new feature.
 ```
 
+### Codex
+
+Install Killhouse from a Codex marketplace entry that points at this repository, or add the checked-out
+plugin to a local Codex marketplace and install it with:
+
+```bash
+codex plugin add killhouse@<marketplace-name>
+```
+
+Then start a fresh Codex thread so the skills are loaded. Kick off the pipeline by asking Codex to use
+the `ask-kh` skill:
+
+```text
+> Use ask-kh for this feature: I want to build a new feature.
+```
+
+If the plugin is not installed, tell Codex to read `skills/ask-kh/SKILL.md` directly; all stages resolve
+to files in this repository.
+
 **Optional — add redqueen (the prompt-evolution engine).** Skip this to just try the pipeline; the
 "evolve execution prompt" stage auto-degrades to a plain prompt when redqueen isn't present. Requires
 [`uv`](https://docs.astral.sh/uv/):
@@ -45,7 +74,9 @@ bin/evolve_exec_prompt.py --mock --rounds 2 --iterations 3 --init-random 2 --bat
 ```
 
 For a *meaningful* evolved prompt, point it at a local model (`OPENAI_BASE_URL` + `DRQ_MODEL`) and run
-without `--mock`. To remove Killhouse later: `claude plugin uninstall killhouse`.
+without `--mock`. To remove Killhouse later, use the uninstall command for your runtime, such as
+`claude plugin uninstall killhouse` in Claude Code or the corresponding `codex plugin` removal command
+in Codex.
 
 ## The Architecture
 
@@ -104,7 +135,14 @@ Once the plugin is installed (see [Quickstart](#quickstart)), start any new proj
 > /ask-kh I want to build a new feature.
 ```
 
-The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost and instruct you to begin with `/grill-with-docs`, launching the pipeline.
+In Codex, ask for the same skill by name:
+
+```text
+> Use ask-kh for this feature: I want to build a new feature.
+```
+
+The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost and instruct you to begin with
+`/grill-with-docs` in Claude Code, or the `grill-with-docs` skill in Codex, launching the pipeline.
 
 ## Operating Principles
 

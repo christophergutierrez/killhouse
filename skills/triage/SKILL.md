@@ -39,13 +39,17 @@ For a PR, the same states read against the attached code: `ready-for-agent` mean
 
 Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
-These are canonical role names — the actual label strings used in the issue tracker may differ. The mapping should have been provided to you - run `/setup-matt-pocock-skills` if not.
+These are canonical role names — the actual label strings used in the issue tracker may differ. The
+mapping should come from the repository's own issue-tracker docs or prior Killhouse context. If no
+mapping exists, record the canonical names as an assumption and ask only when applying labels would
+otherwise mutate the wrong tracker state.
 
 State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the reporter replies. The maintainer can override at any time — flag transitions that look unusual and ask before proceeding.
 
 ## Invocation
 
-The maintainer invokes `/triage` and describes what they want in natural language. Interpret the request and act. Examples:
+The maintainer invokes `/triage` in Claude Code, or the `triage` skill in Codex,
+and describes what they want in natural language. Interpret the request and act. Examples:
 
 - "Show me anything that needs my attention"
 - "Let's look at #42" (issue or PR)
@@ -119,7 +123,8 @@ Within the Killhouse pipeline, triage's job is the routing decision `ask-kh` con
 - **Trivial** — small, low-risk, well-understood. Route straight to `loops/IMPLEMENT_MILESTONE` with a
   minimal milestone (outcome + one acceptance gate). Skip grilling, PRD, and planning.
 - **Major** — anything touching a public contract, persisted data, migrations, security/auth/billing,
-  unclear scope, or more than a handful of files. Enter the full flow at `/grill-with-docs`.
+  unclear scope, or more than a handful of files. Enter the full flow at `/grill-with-docs` in Claude
+  Code, or the `grill-with-docs` skill in Codex.
 
 The issue-tracker state machine above is Matt's base — Killhouse's pipeline drives `PLAN`/`IMPLEMENT_MILESTONE`
 rather than an issue tracker, so treat the tracker roles as optional intake and keep the trivial/major call

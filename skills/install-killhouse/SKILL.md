@@ -1,12 +1,12 @@
 ---
 name: install-killhouse
-description: Install the Killhouse plugin, and optionally the redqueen prompt-evolution engine. Use when the user asks to install, set up, or add Killhouse — e.g. "install killhouse", "install killhouse with redqueen", "set up killhouse without redqueen". Ask about redqueen only when the user did not specify.
+description: Install the Killhouse plugin for the current runtime, and optionally the redqueen prompt-evolution engine. Use when the user asks to install, set up, or add Killhouse — e.g. "install killhouse", "install killhouse with redqueen", "set up killhouse without redqueen". Ask about redqueen only when the user did not specify.
 ---
 
 # Install Killhouse
 
-You (the agent) can perform this install end to end with the `claude plugin` CLI and shell — no
-user-typed slash commands are required. Work through the steps in order, running the commands
+You (the agent) can perform this install end to end with the current runtime's plugin CLI and shell —
+no user-typed slash commands are required. Work through the steps in order, running the commands
 yourself and reporting results.
 
 ## Step 0 — Decide the redqueen scope
@@ -23,7 +23,8 @@ include it from the user's phrasing:
 
 ## Step 1 — Get the repository
 
-- If you are already inside a Killhouse checkout (a `.claude-plugin/` and `AGENTS.md` are present),
+- If you are already inside a Killhouse checkout (`.claude-plugin/`, `.codex-plugin/`, and `AGENTS.md`
+  are present),
   use it. If redqueen is wanted, ensure the submodule is hydrated: `git submodule update --init --recursive`.
 - Otherwise clone it. Use `--recursive` whenever redqueen is wanted (harmless otherwise):
   ```bash
@@ -33,6 +34,10 @@ include it from the user's phrasing:
 
 ## Step 2 — Register the plugin (always)
 
+Use the branch for the runtime you are currently running in.
+
+### Claude Code
+
 ```bash
 claude plugin marketplace add christophergutierrez/killhouse
 claude plugin install killhouse@killhouse
@@ -41,7 +46,21 @@ claude plugin install killhouse@killhouse
 - Default scope is `user`. Add `--scope project` to tie it to the current repo instead.
 - Confirm with `claude plugin list` (expect `killhouse@killhouse`).
 - **The skills activate in a new session** — tell the user to restart Claude Code (or start a fresh
-  session) before `/ask-kh` and the other commands appear.
+  session) before `/ask-kh` and the other slash commands appear.
+
+### Codex
+
+Install from a Codex marketplace entry that points at this repository or checkout:
+
+```bash
+codex plugin add killhouse@<marketplace-name>
+```
+
+- For a local checkout that is not already in a marketplace, add or update the appropriate Codex
+  marketplace entry first, then install from that marketplace.
+- Confirm with `codex plugin list` (expect `killhouse` from the selected marketplace).
+- **The skills activate in a new thread** — tell the user to start a fresh Codex thread before asking
+  for the `ask-kh` skill.
 
 ## Step 3 — Set up redqueen (only if chosen in Step 0)
 
@@ -65,7 +84,8 @@ cd lib/redqueen && uv sync && cd ../..
 
 Tell the user exactly what happened:
 
-- plugin installed (and scope), and that a fresh session is needed for the commands to appear;
+- plugin installed (runtime and scope/marketplace), and that a fresh session/thread is needed for the
+  skills to appear;
 - whether redqueen was set up, skipped by choice, or skipped because `uv` was missing;
 - if redqueen was skipped, how to add it later: run this skill again and say **"install killhouse with
   redqueen"**.
@@ -73,7 +93,9 @@ Tell the user exactly what happened:
 ## Edge cases
 
 - **No network / clone fails** → report the failure; nothing was installed.
-- **Already installed** → offer `claude plugin update killhouse` instead of re-installing (restart
-  required to apply).
-- **Validation check** (optional, before install) → `claude plugin validate .` from the repo root
-  confirms the manifests are well-formed.
+- **Already installed** → offer the runtime's update/reinstall flow instead of re-installing from
+  scratch. In Claude Code, use `claude plugin update killhouse`; in Codex, reinstall from the
+  marketplace after updating the plugin cache/version as required by the local Codex workflow.
+- **Validation check** (optional, before install) → in Claude Code, `claude plugin validate .` from the
+  repo root confirms the Claude manifest is well-formed. In Codex, validate `.codex-plugin/plugin.json`
+  with the available Codex plugin validator or at least parse it as JSON before install.

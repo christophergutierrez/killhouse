@@ -1,7 +1,7 @@
 ---
 name: ask-kh
 description: Drive a code change through the Killhouse pipeline. Routes you to the right stage and runs the gauntlet at the autonomy level you choose.
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Ask KH
@@ -10,9 +10,9 @@ One destination: ship a code change through the Killhouse gauntlet. Unlike a gen
 "which skill fits?" router, `ask-kh` has a single flow and drives it — it tracks which
 stage you're at, what to invoke next, and how much to stop and check with you along the way.
 
-Every stage is a pointer. `ask-kh` invokes lightweight skills for the front end and spawns
-subagents that read the heavy `loops/` payloads for the rigorous middle. It never inlines a
-loop's contents into the main session.
+Every stage is a pointer. `ask-kh` invokes lightweight skills for the front end and, when the runtime
+supports it, spawns subagents that read the heavy `loops/` payloads for the rigorous middle. It never
+inlines a loop's contents into the main session.
 
 ## The pipeline
 
@@ -29,12 +29,15 @@ loop's contents into the main session.
              → done
 ```
 
-- **`/triage`** — classify the request. **Trivial** (small, low-risk, well-understood bug or
+- **`/triage`** — classify the request. In Codex, use the `triage` skill by name. **Trivial** (small,
+  low-risk, well-understood bug or
   change) routes straight to `loops/IMPLEMENT_MILESTONE`. **Major** enters the full flow.
-- **`/grill-with-docs`** — the human-alignment stage. Interview to sharpen the idea, building
+- **`/grill-with-docs`** — the human-alignment stage. In Codex, use the `grill-with-docs` skill by
+  name. Interview to sharpen the idea, building
   `CONTEXT.md` and ADRs as it goes. This is where you front-load everything the pipeline needs
   to run unattended, so it is always interactive.
-- **`/to-prd`** — synthesize the grilled conversation into a PRD. No new interview.
+- **`/to-prd`** — synthesize the grilled conversation into a PRD. In Codex, use the `to-prd` skill by
+  name. No new interview.
 - **`loops/REVIEW_DOCUMENT`** — 9-subagent spec audit; converges the PRD.
 - **`loops/PLAN`** — produces `implementation-plan.md` with traceability, invariants, and
   falsifiable acceptance gates. Does not write code.
@@ -125,8 +128,10 @@ work, and do not silently keep spending. Record what tripped in `budget` state.
 Keeping the main session lean is a core feature, not a side effect — enforce it at every stage:
 
 - Each heavy loop (`REVIEW_DOCUMENT`, `PLAN`, `IMPLEMENT_MILESTONE`, `CODE_REVIEW_TRIBUNAL`,
-  `ARCHITECTURE_DESIGN`) runs as a **delegated subagent**. `ask-kh` never inlines a loop's rounds,
-  reviewer transcripts, or raw tool output into the main session.
+  `ARCHITECTURE_DESIGN`) runs as a **delegated subagent** when the runtime supports subagents. If it
+  does not, run the loop inline as labeled passes using the loop's Runtime Degradation section.
+  `ask-kh` never inlines a loop's rounds, reviewer transcripts, or raw tool output into the main
+  session.
 - A stage returns only its **artifact path + verdict** (e.g. `implementation-plan.md` + `READY`), which
   `ask-kh` records as a pointer. The artifact is the handoff; the transcript is discarded.
 - The interactive front-end skills (`triage`, `grill-with-docs`, `to-prd`) run in the main chat by design,

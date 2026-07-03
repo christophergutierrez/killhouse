@@ -8,22 +8,29 @@ at the entrypoint.
 ## Installing (if the plugin isn't set up yet)
 
 If the user asks to install/set up Killhouse, follow **`skills/install-killhouse/SKILL.md`** — it
-handles the redqueen branch (include when they say "with redqueen"; ask when unspecified). The whole
-install is agent-runnable via the `claude plugin` CLI; no user-typed slash commands are needed. Cold-start
-essentials:
+handles the runtime-specific plugin install and the redqueen branch (include when they say "with
+redqueen"; ask when unspecified). The whole install should be agent-runnable via the current runtime's
+plugin CLI; no user-typed slash commands are needed. Cold-start essentials:
 
 ```bash
 git clone --recursive https://github.com/christophergutierrez/killhouse.git && cd killhouse
+
+# Claude Code
 claude plugin marketplace add christophergutierrez/killhouse
 claude plugin install killhouse@killhouse           # skills activate next session
+
+# Codex (from a configured marketplace entry that points at this checkout/repo)
+codex plugin add killhouse@<marketplace-name>       # skills activate next thread
+
 # optional redqueen: cd lib/redqueen && uv sync && cd ../..
 ```
 
 ## Entrypoint
 
-To run the pipeline, read and follow **`skills/ask-kh/SKILL.md`** (invocable as `/ask-kh` when the
-plugin is installed). It is the stateful driver: it classifies the request, routes it through the
-stages, and holds the autonomy setting (Checkpoint vs Autopilot).
+To run the pipeline, read and follow **`skills/ask-kh/SKILL.md`**. In Claude Code it is invocable as
+`/ask-kh` when the plugin is installed; in Codex, ask for the `ask-kh` skill by name. It is the
+stateful driver: it classifies the request, routes it through the stages, and holds the autonomy
+setting (Checkpoint vs Autopilot).
 
 ## How references resolve
 
@@ -36,7 +43,8 @@ The skills invoke each other and the loops by name. Resolve them as files:
 - The prompt-evolution engine → `lib/redqueen` (a git submodule; see below)
 
 If your runtime supports Claude Code plugins, the skills register as real slash commands via
-`.claude-plugin/plugin.json`. If not, reach every skill by reading its `SKILL.md` directly — the
+`.claude-plugin/plugin.json`. If your runtime supports Codex plugins, the skills register via
+`.codex-plugin/plugin.json`. If not, reach every skill by reading its `SKILL.md` directly — the
 pipeline is plain markdown and works in any agent that can read files and run shell commands.
 
 ## Non-negotiables (hold these even if you never open `ask-kh`)

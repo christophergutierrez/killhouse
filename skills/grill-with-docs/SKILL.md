@@ -20,4 +20,4 @@ and ask the two questions that set the rest of the run:
 1. **Ready for the PRD?** (or another grilling pass)
 2. **Checkpoint or Autopilot?** (stop at each stage, or run to completion)
 
-On "ready + mode chosen," `ask-kh` advances to `/to-prd`.
+On "ready + mode chosen," `ask-kh` advances to `/to-prd` in Claude Code, or the `to-prd` skill in Codex.

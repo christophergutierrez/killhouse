@@ -5,7 +5,9 @@ description: Synthesize a completed grilling conversation into a PRD — no inte
 
 This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user — just synthesize what you already know.
 
-The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
+The issue tracker and triage label vocabulary should have been provided by the repository's own docs or
+prior Killhouse stages. If they are absent, record that as an assumption or gap in the PRD; do not invoke
+external setup commands from the vendored upstream skill set.
 
 ## Process
 
