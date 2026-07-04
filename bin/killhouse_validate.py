@@ -83,6 +83,11 @@ def check_delegation() -> None:
         require("verdict" in text.lower(), f"{path} lacks verdict wording")
     contains("loops/REVIEW_DOCUMENT.md", "verdict: CONVERGED | OPEN_QUESTIONS | MAX_ROUNDS | BLOCKED")
     contains("loops/REVIEW_DOCUMENT.md", "Never return reviewer transcripts or raw round output")
+    contains("loops/PLAN.md", "EXECUTION_POLICY")
+    contains("loops/PLAN.md", "cost_optimized")
+    contains("loops/PLAN.md", "time_optimized")
+    contains("loops/IMPLEMENT_MILESTONE.md", "Execution policy controls tier, not quality")
+    contains("loops/CODE_REVIEW_TRIBUNAL.md", "Review commits, diffs, artifacts, and gate output")
 
 
 def check_install() -> None:
@@ -104,6 +109,9 @@ def check_mandatory_gates() -> None:
 def check_docs_sync() -> None:
     contains("README.md", "/triage")
     contains("README.md", "Ponytail reviewer")
+    contains("skills/ask-kh/SKILL.md", "Execution policy")
+    contains("skills/ask-kh/SKILL.md", "cost_optimized")
+    contains("skills/ask-kh/SKILL.md", "time_optimized")
     contains("skills/to-prd/SKILL.md", "Do not check with the user during this skill")
     contains("skills/to-prd/SKILL.md", "Do not publish it to an issue tracker")
     not_contains("skills/to-prd/SKILL.md", "publish it to the project issue tracker")

@@ -76,16 +76,29 @@ The pipeline can stop and check with you at every stage boundary, or run end to 
 ### The post-grill gate (always stops)
 
 `/grill-with-docs` is where you and the agent get aligned, so the pipeline **always** stops when it
-ends and asks two things:
+ends and asks two things, plus one optional override:
 
 1. **Ready for the PRD?** — or do you want another grilling pass first.
 2. **Checkpoint or Autopilot?** — how the rest of the run should behave:
    - **Checkpoint** — stop at each courtesy checkpoint (each stage boundary) and wait for your go-ahead.
    - **Autopilot** — run to completion without stopping at courtesy checkpoints. "Set and forget."
+3. **Execution policy override?** — default is `cost_optimized`. The user may choose
+   `time_optimized` when wall-clock time matters more than model spend.
 
 The reasoning behind this placement: if the grilling did its job, everything the pipeline needs is
 already captured in `CONTEXT.md`, the ADRs, and the conversation — so Autopilot is safe to choose here
 and nowhere earlier.
+
+### Execution policy
+
+Quality is held constant by gates and review. The execution policy only chooses the route to that
+quality bar:
+
+- `cost_optimized` (default) — prefer the cheapest capable tier for bounded implementation and
+  mechanical work. Escalate only after evidence: failed gates, repeated same failure, scope expansion,
+  security/architecture uncertainty, or reviewer rejection.
+- `time_optimized` — prefer stronger tiers earlier when retries would likely cost more wall-clock time
+  than they save. Still delegate mechanical checks and independent review to cheaper tiers where safe.
 
 ### Checkpoint mode
 
@@ -179,6 +192,7 @@ flow the moment the "trivial" change turns out to touch a mandatory-gate boundar
 - `classification`: trivial | major
 - `stage`: current pipeline stage
 - `autonomy`: checkpoint | autopilot
+- `execution_policy`: cost_optimized | time_optimized
 - `artifacts`: **file pointers** to CONTEXT.md, PRD, implementation-plan.md, evolved exec prompt, per-milestone verdicts — never the inlined bodies
 - `budget`: `max_milestones_unattended`, `max_pipeline_reentries`, optional `token_budget`, and what has been consumed / what tripped
 - `assumptions_logged`: low-risk defaults taken in Autopilot, for your review at completion

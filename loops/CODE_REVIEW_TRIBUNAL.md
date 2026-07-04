@@ -30,6 +30,9 @@ Perform a practical, devtribunal-style code review and, when requested, converge
 - Do not revert user changes unless explicitly asked.
 - Use existing project patterns, tools, test commands, and formatting.
 - If a tool is unavailable, continue with manual review and note the missing signal.
+- Review commits, diffs, artifacts, and gate output rather than the implementation session transcript.
+  This keeps cost-optimized execution disposable: a weak-model attempt is accepted or rejected from its
+  repository evidence, not from its noisy conversation history.
 
 ### Execution Modes
 

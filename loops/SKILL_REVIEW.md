@@ -83,9 +83,11 @@ the boundary is the instruction contract and artifact handoff, not only a callab
 11. **Capability tiering**: Delegated roles declare the intended capability tier when tier matters,
    why that tier is needed, and how to degrade when model routing is unavailable. Use abstract tiers
    rather than provider-specific model names unless a runtime contract requires a named model.
-12. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
+12. **Execution policy clarity**: Cost and time optimization are routing strategies, not quality levels.
+   Skills preserve `cost_optimized` and `time_optimized` terminology and keep quality gates identical.
+13. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
    blast-radius decisions, and human-confirmation points remain enforceable.
-13. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
+14. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
    without relying on subjective prose judgment.
 
 ## Evaluation Model
@@ -162,6 +164,7 @@ Safety is a gate, not a score. Any critical safety failure disqualifies the chan
   that should be split into focused skills, missing capability tier for a role where tier matters,
   expensive/reasoning-tier delegation for mechanical work without justification, missing model-routing
   fallback, inline work chosen without a brief justification where delegation would preserve context,
+  execution-policy wording that implies different quality gates for cost/time modes,
   or wording likely to make agents over- or under-apply a stage.
 - **Minor**: Non-blocking clarity, naming consistency, discoverability, or formatting issue that does not
   change execution semantics.
@@ -359,6 +362,18 @@ Run what is available and record unavailable tools as risks, not silent skips.
   - Fallback: If model routing is unavailable, run with the current model and record
     `gate_audit: inline/current-model`.
 ```
+
+### Execution Policy
+
+- Preserve the policy names `cost_optimized` and `time_optimized`.
+- Treat execution policy as a cost/time routing choice, not a quality setting. Gates, mandatory stops,
+  review standards, and final verdicts stay the same in both modes.
+- `cost_optimized` may try cheaper tiers first only for bounded, reversible work with objective gates
+  and explicit escalation triggers.
+- `time_optimized` may choose stronger tiers earlier to reduce wall-clock time and failed attempts, but
+  should still delegate mechanical checks and independent review to cheaper tiers where safe.
+- Flag provider-specific examples in core instructions unless they are clearly marked as examples or
+  runtime-specific mappings.
 
 ### Gate Integrity
 

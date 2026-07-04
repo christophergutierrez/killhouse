@@ -23,6 +23,7 @@ machine-readable verdict block — never its discovery notes, reviewer transcrip
 - **MAX_PASSES**: Maximum review-revise passes. Default: `5`.
 - **MODE**: `create` | `review-existing` | `review-only` | `converge`. Default: `converge`.
 - **TIER_OVERRIDE**: Force a task tier (`light` | `standard` | `full`). Optional.
+- **EXECUTION_POLICY**: `cost_optimized` | `time_optimized`. Default: `cost_optimized`.
 
 ---
 
@@ -94,6 +95,22 @@ justified in the matrix or milestone block.
 **Reviewer independence**: reviewers receive the plan and evidence, never each other's findings.
 Findings stay raw until Lead Planner synthesis. When roles run inline, complete and record each
 reviewer pass before starting the next, and do not revise earlier findings in light of later ones.
+
+### 3.1 Execution Policy
+
+Quality is fixed by gates, review, and mandatory halts. Execution policy only changes the route to
+that quality bar:
+
+- **cost_optimized** *(default)*: Prefer the cheapest capable tier for bounded implementation,
+  mechanical validation, docs sync, and other reversible work. Escalate after evidence: failed gates,
+  repeated same failure, scope expansion, security/architecture uncertainty, or reviewer rejection.
+- **time_optimized**: Prefer stronger tiers earlier when failed attempts would likely cost more
+  wall-clock time than they save. Still use cheaper tiers for mechanical checks, inventories, and
+  independent review where safe.
+
+The plan must record the selected policy and explain tier choices in the Subagent Matrix. Do not
+lower tier for safety decisions, architecture judgment, final verdicts, or mandatory gates just to
+save model cost.
 
 ---
 
@@ -446,6 +463,7 @@ This describes what the executor needs; it does not authorize this loop to imple
 - verdict: READY | READY_WITH_ASSUMPTIONS | BLOCKED
 - task_tier: light | standard | full
 - tier_trigger: why this tier was selected
+- execution_policy: cost_optimized | time_optimized
 - reason: <short summary>
 
 ## Repository State (Staleness Contract)
@@ -477,12 +495,12 @@ Cheap per-pass subset: <ids>. Full suite at: phase-end / final.
 #### Milestone: <stable-slug>
 - outcome (observable, not an activity) / traces_to (standard+) / implementation_scope / dependencies
 - tracer_bullet: yes | no | prerequisite | not_applicable, with rationale
-- subagent_work: role, tier, scope, inputs, required output
+- subagent_work: role, tier, delegate, policy_rationale, escalation_trigger, scope, inputs, required output
 - acceptance_gates: exact commands + expected results + baseline_polarity + post_condition + evidence
 - gate_failure_reasoning / invariants_at_risk / evidence_to_record / rollback_unit / stop_conditions
 
 ## Subagent Matrix
-| Work item | Role | Tier | Delegate? | Why | Inputs | Required output |
+| Work item | Role | Tier | Delegate? | Policy rationale | Escalation trigger | Inputs | Required output |
 
 ## Consolidated Verification
 Proves: new behavior works; obsolete assets and references gone; affected tests pass; unrelated
@@ -504,6 +522,7 @@ Append a machine-readable verdict block:
   "verdict": "READY | READY_WITH_ASSUMPTIONS | BLOCKED",
   "task_tier": "light | standard | full",
   "tier_trigger": "string",
+  "execution_policy": "cost_optimized | time_optimized",
   "passes": 0,
   "open_blocking_findings": 0,
   "open_material_findings": 0,

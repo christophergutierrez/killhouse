@@ -69,6 +69,28 @@
       ]
     },
     {
+      "id": "execution-policy-cost-vs-time",
+      "group": "dev",
+      "description": "The pipeline exposes cost_optimized and time_optimized as execution routes with the same quality gates.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/SKILL.md",
+          "text": "Execution policy"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
+          "text": "Quality is fixed by gates, review, and mandatory halts"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "Execution policy controls tier, not quality"
+        }
+      ]
+    },
+    {
       "id": "to-prd-does-not-mutate-tracker",
       "group": "held_out",
       "description": "PRD synthesis records gaps instead of interviewing or publishing to a tracker.",

@@ -37,6 +37,8 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
 - **MAX_ATTEMPTS**: Green attempts allowed per slice before rollback. Default: `2`.
 - **MODE**: `converge` | `dry-run`. Default: `converge`. `dry-run` proves gates fail at baseline and
   reports the slice plan without editing production code.
+- **EXECUTION_POLICY**: `cost_optimized` | `time_optimized`, inherited from `PLAN.md`. Default:
+  `cost_optimized` if absent.
 
 ### Operating Principles
 
@@ -61,6 +63,11 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
   lean. It is the noisiest stage — per-slice failing/passing test output, multiplied by slices and
   milestones — and none of that belongs in the caller. Return only the verdict block plus
   artifact/evidence pointers; keep raw test logs and the loop's reasoning trace inside the loop.
+- **Execution policy controls tier, not quality.** Gates, invariants, and review standards are identical
+  under `cost_optimized` and `time_optimized`. Under `cost_optimized`, use the cheapest capable tier for
+  bounded, reversible implementation slices and escalate on evidence. Under `time_optimized`, use a
+  stronger tier earlier when retries would likely waste wall-clock time. No policy allows replanning,
+  scope expansion, or weakening gates inside this loop.
 
 ### Safety Baseline
 
@@ -93,6 +100,11 @@ Before any slice:
 
 In a single-agent runtime, run each role as a labeled inline pass; keep the Gate Verifier's terminal
 capture raw and separate from the Implementer's narration.
+
+When tier routing is available, follow the milestone's `subagent_work` tier and escalation trigger. If a
+cost-optimized implementation attempt fails the same gate twice, touches scope boundaries, needs a
+security/architecture decision, or is rejected by review, stop and escalate rather than spending more
+cheap attempts.
 
 ### Slice Schema
 
