@@ -8,3 +8,6 @@ redqueen-exec-prompt.md
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Local Killhouse runtime overrides
+.killhouse/config.local.json

@@ -34,6 +34,19 @@ To run the pipeline, read and follow **`skills/ask-kh/SKILL.md`**. In Claude Cod
 stateful driver: it classifies the request, routes it through the stages, and holds the autonomy
 setting (Checkpoint vs Autopilot).
 
+## Model tier map
+
+Killhouse uses abstract capability tiers: `fast`, `standard`, and `reasoning`. A model tier map is
+optional. If none exists, use the current runtime model for every tier and record
+`model_routing: current-model-only`.
+
+If `.killhouse/config.json` or `.killhouse/config.local.json` exists, treat the configured model ids as
+exact opaque runtime identifiers. Do not substitute "nearby" model names. A valid map must define all
+three tiers as non-empty strings. If a config exists but is invalid, stop before the pipeline and ask
+the user to fix or remove it; do not silently fall back. Before running the pipeline, echo the resolved
+map so the user sees exactly which model id is assigned to each tier. If model routing is unavailable,
+say so and do not pretend the map was applied.
+
 For changes to active agent-instruction documents rather than application code, run
 **`loops/SKILL_REVIEW.md`**. Use it for `skills/**/SKILL.md`, `loops/**/*.md`, `AGENTS.md`,
 `README.md`, plugin manifests, marketplace manifests, install docs, and any document an agent is

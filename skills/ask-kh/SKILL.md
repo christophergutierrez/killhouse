@@ -100,6 +100,35 @@ quality bar:
 - `time_optimized` — prefer stronger tiers earlier when retries would likely cost more wall-clock time
   than they save. Still delegate mechanical checks and independent review to cheaper tiers where safe.
 
+### Model tier map
+
+At run start, look for model-tier config in this order:
+
+1. `.killhouse/config.local.json`
+2. `.killhouse/config.json`
+
+If neither exists, use the current runtime model for every tier and record
+`model_routing: current-model-only`.
+
+If config exists, `model_tiers.fast`, `model_tiers.standard`, and `model_tiers.reasoning` must all be
+present as non-empty strings. Treat values as exact opaque runtime model ids. Do not alias, normalize,
+upgrade, downgrade, or substitute model names. Before using model routing, echo the resolved map to the
+user:
+
+```yaml
+model_tiers:
+  fast: exact-id
+  standard: exact-id
+  reasoning: exact-id
+model_routing: configured | current-model-only | unavailable
+```
+
+If a config exists but is invalid, stop before the pipeline and ask the user to fix or remove it. Do not
+silently fall back to the current model, because that hides a routing configuration error.
+
+If model routing is unavailable in the runtime, keep tier labels as intent, run with the current model,
+and record `model_routing: unavailable` rather than pretending the configured map was applied.
+
 ### Checkpoint mode
 
 At each **courtesy checkpoint** (the boundary after a stage completes), present a tight status — what
@@ -193,6 +222,8 @@ flow the moment the "trivial" change turns out to touch a mandatory-gate boundar
 - `stage`: current pipeline stage
 - `autonomy`: checkpoint | autopilot
 - `execution_policy`: cost_optimized | time_optimized
+- `model_tiers`: exact resolved tier map, or current model for all tiers
+- `model_routing`: configured | current-model-only | unavailable
 - `artifacts`: **file pointers** to CONTEXT.md, PRD, implementation-plan.md, evolved exec prompt, per-milestone verdicts — never the inlined bodies
 - `budget`: `max_milestones_unattended`, `max_pipeline_reentries`, optional `token_budget`, and what has been consumed / what tripped
 - `assumptions_logged`: low-risk defaults taken in Autopilot, for your review at completion

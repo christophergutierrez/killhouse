@@ -85,9 +85,13 @@ the boundary is the instruction contract and artifact handoff, not only a callab
    rather than provider-specific model names unless a runtime contract requires a named model.
 12. **Execution policy clarity**: Cost and time optimization are routing strategies, not quality levels.
    Skills preserve `cost_optimized` and `time_optimized` terminology and keep quality gates identical.
-13. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
+13. **Exact model mapping**: Optional model-tier config is strict. If present, it defines exact model ids
+   for `fast`, `standard`, and `reasoning`; agents must echo the resolved map and must not substitute
+   nearby versions, families, providers, or "equivalent" models. Invalid config stops before the
+   pipeline instead of silently falling back.
+14. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
    blast-radius decisions, and human-confirmation points remain enforceable.
-14. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
+15. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
    without relying on subjective prose judgment.
 
 ## Evaluation Model
@@ -164,7 +168,8 @@ Safety is a gate, not a score. Any critical safety failure disqualifies the chan
   that should be split into focused skills, missing capability tier for a role where tier matters,
   expensive/reasoning-tier delegation for mechanical work without justification, missing model-routing
   fallback, inline work chosen without a brief justification where delegation would preserve context,
-  execution-policy wording that implies different quality gates for cost/time modes,
+  execution-policy wording that implies different quality gates for cost/time modes, loose model-tier
+  mapping that permits aliases or unreported substitutions,
   or wording likely to make agents over- or under-apply a stage.
 - **Minor**: Non-blocking clarity, naming consistency, discoverability, or formatting issue that does not
   change execution semantics.
@@ -194,7 +199,7 @@ Default capability tiers:
 | Synthesis Editor | `reasoning` | Owns severity calibration, deduplication, final verdict, and accepted risks. |
 
 Fallback for every role: if model routing is unavailable, run the role with the current model and record
-`capability_tiering: current-model-only` in the verdict.
+`capability_tiering: current-model-only` and `model_routing: unavailable` in the verdict.
 
 - **Invocation & Routing Reviewer**: Verifies every slash command, skill name, loop name, relative link,
   and artifact path resolves to an actual file or documented runtime command.
@@ -343,6 +348,10 @@ Run what is available and record unavailable tools as risks, not silent skips.
   cost, safety, or quality.
 - Do not require provider-specific model names unless a runtime integration actually supports and needs
   them. Prefer capability intent over model branding so Claude Code, Codex, and generic agents can adapt.
+- If `.killhouse/config.json` or `.killhouse/config.local.json` defines model tiers, validate that all
+  three tiers exist as non-empty strings and treat each value as an exact opaque runtime id. Do not
+  substitute model names. Echo the resolved map before use. If the config is invalid, require a stop
+  until the user fixes or removes it.
 - Flag reasoning-tier agents assigned to mechanical validation or file inventory as Material unless the
   risk profile justifies the cost.
 - Flag fast/low-capability agents assigned to safety gates, synthesis, final approval, or architecture
@@ -537,4 +546,4 @@ evidence for a finding, and keep it brief.
 | No shell access | Perform reference and instruction review from file contents; mark validation commands unrun. |
 | No git | Use explicit `SCOPE` or review all active instruction surfaces; record that baseline status is unknown. |
 | No runtime validator | Validate JSON/frontmatter shape manually and report validator unavailability as a risk. |
-| No model routing | Run every role with the current model; preserve tier labels as intent and record `capability_tiering: current-model-only`. |
+| No model routing | Run every role with the current model; preserve tier labels as intent and record `capability_tiering: current-model-only` and `model_routing: unavailable`. |

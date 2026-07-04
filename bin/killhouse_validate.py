@@ -50,6 +50,19 @@ def check_manifests() -> None:
     require((ROOT / codex["skills"]).is_dir(), "Codex skills directory does not exist")
 
 
+def check_model_config() -> None:
+    check_json(".killhouse/config.example.json")
+
+    config = json.loads((ROOT / ".killhouse/config.example.json").read_text())
+    require(config.get("execution_policy") in {"cost_optimized", "time_optimized"}, "invalid execution_policy")
+
+    tiers = config.get("model_tiers")
+    require(isinstance(tiers, dict), "model_tiers must be an object")
+    for tier in ("fast", "standard", "reasoning"):
+        value = tiers.get(tier)
+        require(isinstance(value, str) and value.strip(), f"model_tiers.{tier} must be a non-empty string")
+
+
 def check_runtime_contracts() -> None:
     contains("AGENTS.md", "/ask-kh")
     contains("AGENTS.md", "ask-kh` skill by name")
@@ -109,9 +122,20 @@ def check_mandatory_gates() -> None:
 def check_docs_sync() -> None:
     contains("README.md", "/triage")
     contains("README.md", "Ponytail reviewer")
+    contains("README.md", "Optional Model Routing")
+    contains("README.md", "Configured model ids are exact")
+    contains("README.md", "If a config exists but is invalid")
+    contains("AGENTS.md", "Model tier map")
+    contains("AGENTS.md", "A model tier map is\noptional")
     contains("skills/ask-kh/SKILL.md", "Execution policy")
     contains("skills/ask-kh/SKILL.md", "cost_optimized")
     contains("skills/ask-kh/SKILL.md", "time_optimized")
+    contains("skills/ask-kh/SKILL.md", "Model tier map")
+    contains("skills/ask-kh/SKILL.md", "model_routing: configured | current-model-only | unavailable")
+    contains("skills/ask-kh/SKILL.md", "If a config exists but is invalid")
+    contains("loops/PLAN.md", "MODEL_TIER_MAP")
+    contains("loops/SKILL_REVIEW.md", "Exact model mapping")
+    contains(".gitignore", ".killhouse/config.local.json")
     contains("skills/to-prd/SKILL.md", "Do not check with the user during this skill")
     contains("skills/to-prd/SKILL.md", "Do not publish it to an issue tracker")
     not_contains("skills/to-prd/SKILL.md", "publish it to the project issue tracker")
@@ -126,6 +150,7 @@ def check_redqueen() -> None:
 
 CHECKS = {
     "manifests": check_manifests,
+    "model-config": check_model_config,
     "runtime-contracts": check_runtime_contracts,
     "instruction-review": check_instruction_review,
     "delegation": check_delegation,

@@ -70,7 +70,27 @@ codex plugin add killhouse@<marketplace-name-shown-by-list>
 - **The skills activate in a new thread** — tell the user to start a fresh Codex thread before asking
   for the `ask-kh` skill.
 
-## Step 3 — Set up redqueen (only if chosen in Step 0)
+## Step 3 — Optionally configure model tiers
+
+Killhouse can route work by abstract tiers: `fast`, `standard`, and `reasoning`. This is optional. If
+the user does not configure it, Killhouse uses the current runtime model for every tier and records
+`model_routing: current-model-only`.
+
+If the user wants routing, create either a project config at `.killhouse/config.json` or a local override
+at `.killhouse/config.local.json`. The local override is ignored by git. Start from
+`.killhouse/config.example.json`.
+
+Rules:
+
+- All three tiers must be present: `fast`, `standard`, and `reasoning`.
+- Values are exact opaque runtime model ids, such as a proxy route name. Do not normalize, alias, or
+  substitute them.
+- If a config exists but is invalid, Killhouse should stop before the pipeline until the user fixes or
+  removes it.
+- Before the first run, echo the resolved map to the user. If the runtime cannot route models, report
+  that the map exists but cannot be applied.
+
+## Step 4 — Set up redqueen (only if chosen in Step 0)
 
 ```bash
 which uv || echo "uv not installed"     # redqueen needs uv
@@ -88,7 +108,7 @@ cd lib/redqueen && uv sync && cd ../..
   `OPENAI_BASE_URL=http://localhost:11434/v1 DRQ_MODEL=qwen2.5-coder:32b OPENAI_API_KEY=ollama`
   before running `bin/evolve_exec_prompt.py` without `--mock`.
 
-## Step 4 — Report
+## Step 5 — Report
 
 Tell the user exactly what happened:
 

@@ -91,6 +91,38 @@
       ]
     },
     {
+      "id": "strict-optional-model-tier-map",
+      "group": "dev",
+      "description": "Model tier config is optional, exact, and echoed before use.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "AGENTS.md",
+          "text": "A model tier map is\noptional"
+        },
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/SKILL.md",
+          "text": "Do not alias, normalize,\nupgrade, downgrade, or substitute model names"
+        },
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/SKILL.md",
+          "text": "If a config exists but is invalid"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
+          "text": "MODEL_TIER_MAP"
+        },
+        {
+          "type": "contains",
+          "path": ".killhouse/config.example.json",
+          "text": "proxy/exact-reasoning-model-id"
+        }
+      ]
+    },
+    {
       "id": "to-prd-does-not-mutate-tracker",
       "group": "held_out",
       "description": "PRD synthesis records gaps instead of interviewing or publishing to a tracker.",

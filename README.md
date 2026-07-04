@@ -64,6 +64,17 @@ the `ask-kh` skill:
 If the plugin is not installed, tell Codex to read `skills/ask-kh/SKILL.md` directly; all stages resolve
 to files in this repository.
 
+### Optional Model Routing
+
+Killhouse uses abstract tiers: `fast`, `standard`, and `reasoning`. Model routing is optional. If you
+do not configure it, Killhouse uses the current runtime model for every tier.
+
+If you use a proxy or multiple providers, start from `.killhouse/config.example.json` and create either
+`.killhouse/config.json` for a project default or `.killhouse/config.local.json` for a local override.
+Configured model ids are exact. Killhouse will echo the resolved tier map before using it and will not
+substitute nearby versions or equivalent-looking models. If a config exists but is invalid, Killhouse
+stops before the pipeline instead of silently falling back.
+
 **Optional - add redqueen (the prompt-evolution engine).** Skip this to just try the pipeline; the
 "evolve execution prompt" stage auto-degrades to a plain prompt when redqueen isn't present. Requires
 [`uv`](https://docs.astral.sh/uv/):

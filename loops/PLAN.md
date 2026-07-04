@@ -24,6 +24,8 @@ machine-readable verdict block — never its discovery notes, reviewer transcrip
 - **MODE**: `create` | `review-existing` | `review-only` | `converge`. Default: `converge`.
 - **TIER_OVERRIDE**: Force a task tier (`light` | `standard` | `full`). Optional.
 - **EXECUTION_POLICY**: `cost_optimized` | `time_optimized`. Default: `cost_optimized`.
+- **MODEL_TIER_MAP**: Optional exact model ids for `fast`, `standard`, and `reasoning`. If provided,
+  all three tiers are required and values must be used exactly as supplied.
 
 ---
 
@@ -111,6 +113,18 @@ that quality bar:
 The plan must record the selected policy and explain tier choices in the Subagent Matrix. Do not
 lower tier for safety decisions, architecture judgment, final verdicts, or mandatory gates just to
 save model cost.
+
+### 3.2 Model Tier Map
+
+Use abstract tiers in the plan: `fast`, `standard`, and `reasoning`. If `MODEL_TIER_MAP` is absent,
+record `model_routing: current-model-only` and treat the current runtime model as all tiers.
+
+If `MODEL_TIER_MAP` is present, it must define exact non-empty model ids for all three tiers. Treat
+those values as opaque runtime identifiers. Do not substitute a nearby version, family, provider, or
+"equivalent" model. If the map is invalid, stop before planning until the user fixes or removes it;
+do not silently fall back. Record the resolved map in the plan, and require the executor to echo it
+before using model routing. If the runtime cannot route models, keep the tier labels as intent and
+record `model_routing: unavailable`.
 
 ---
 
@@ -464,6 +478,8 @@ This describes what the executor needs; it does not authorize this loop to imple
 - task_tier: light | standard | full
 - tier_trigger: why this tier was selected
 - execution_policy: cost_optimized | time_optimized
+- model_routing: configured | current-model-only | unavailable
+- model_tiers: fast / standard / reasoning exact ids, or current model for all tiers
 - reason: <short summary>
 
 ## Repository State (Staleness Contract)
@@ -523,6 +539,8 @@ Append a machine-readable verdict block:
   "task_tier": "light | standard | full",
   "tier_trigger": "string",
   "execution_policy": "cost_optimized | time_optimized",
+  "model_routing": "configured | current-model-only | unavailable",
+  "model_tiers": { "fast": "string", "standard": "string", "reasoning": "string" },
   "passes": 0,
   "open_blocking_findings": 0,
   "open_material_findings": 0,

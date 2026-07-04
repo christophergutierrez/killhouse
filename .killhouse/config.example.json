@@ -1,0 +1,8 @@
+{
+  "execution_policy": "cost_optimized",
+  "model_tiers": {
+    "fast": "proxy/exact-fast-model-id",
+    "standard": "proxy/exact-standard-model-id",
+    "reasoning": "proxy/exact-reasoning-model-id"
+  }
+}
