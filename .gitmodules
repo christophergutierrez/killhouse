@@ -1,3 +1,4 @@
 [submodule "lib/redqueen"]
 	path = lib/redqueen
 	url = https://github.com/christophergutierrez/redqueen.git
+    ignore = untracked
