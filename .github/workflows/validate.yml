@@ -31,3 +31,8 @@ jobs:
           python3 -m json.tool .claude-plugin/marketplace.json > /dev/null
           python3 -m json.tool .codex-plugin/plugin.json > /dev/null
           python3 -m json.tool .killhouse/config.example.json > /dev/null
+
+      - name: Validate Claude plugin manifest (Anthropic loader)
+        run: |
+          npm install -g @anthropic-ai/claude-code --quiet
+          claude plugin validate .

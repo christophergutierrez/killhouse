@@ -83,7 +83,7 @@ stops before the pipeline instead of silently falling back.
 git clone --recursive https://github.com/christophergutierrez/killhouse.git
 cd killhouse/lib/redqueen && uv sync && cd ../..
 
-# prove it works offline (mock fitness is 0.0 by design)
+# proves plumbing end-to-end; prompt intentionally not written; exit 0 confirms plumbing
 bin/evolve_exec_prompt.py --mock --rounds 2 --iterations 3 --init-random 2 --batch 2 \
   --out runs/exec --prompt-out redqueen-exec-prompt.md
 ```

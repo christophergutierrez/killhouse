@@ -149,7 +149,7 @@ Setup and use:
 # one-time (or let `uv run` resolve deps on first call)
 cd lib/redqueen && uv sync && cd ../..
 
-# offline plumbing check — proves the wiring; fitness is 0.0, so the prompt is NOT meaningful
+# offline plumbing check — proves the wiring; prompt intentionally not written; exit 0 confirms plumbing
 bin/evolve_exec_prompt.py --mock --rounds 2 --iterations 3 --init-random 2 --batch 2 \
   --out runs/exec --prompt-out redqueen-exec-prompt.md
 
