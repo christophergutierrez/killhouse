@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "killhouse",
-      "source": "./.claude-plugin",
+      "source": ".",
       "description": "A rigorous, unforgiving AI pipeline where code is planned, tested, and audited without mercy.",
       "version": "0.2.0",
       "license": "MIT",

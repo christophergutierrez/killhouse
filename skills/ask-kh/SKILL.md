@@ -49,21 +49,20 @@ completion or Abort, delete it.
 
 - **`/classify`** — classify the request as trivial or major. In Codex or generic agents, use the
   `classify` skill by name. Returns `classification: trivial | major` + rationale.
-  Use `/triage` (the `triage` skill) instead when the request comes from a GitHub issue or PR.
+  Use `/triage` (the `triage` skill by name` in Codex) instead when the request comes from a GitHub issue or PR.
 - **`/grill-with-docs`** — interactive alignment; builds `CONTEXT.md` and ADRs. Always interactive.
 - **`/to-prd`** — synthesize the grilled conversation into a PRD. No new interview.
 - **`loops/REVIEW_DOCUMENT`** — 9-subagent spec audit; converges the PRD.
 - **`loops/PLAN`** — produces `implementation-plan.md`. Does not write code.
-- **`lib/redqueen`** — optional prompt evolution via `bin/evolve_exec_prompt.py`. Self-degrades if
-  not set up.
+- **`lib/redqueen`** — optional prompt evolution via `bin/evolve_exec_prompt.py`. Self-degrades to
+  a plain implementer prompt if not set up or if champion fitness is 0.0.
 - **`loops/IMPLEMENT_MILESTONE`** — TDD red-green-refactor per milestone.
 - **`loops/CODE_REVIEW_TRIBUNAL`** — multi-specialist review; blocking findings fixed to a `PASS`.
 - **`loops/ARCHITECTURE_DESIGN`** — final depth, boundary, and domain-language check.
 
 ## Autonomy: the one setting that matters
 
-Choose **once, at the post-grill gate**. Details in
-`skills/ask-kh/references/autonomy.md`.
+Autopilot skips *courtesy* checkpoints, never mandatory gates. Choose **once, at the post-grill gate**. Details in `skills/ask-kh/references/autonomy.md`.
 
 ### The post-grill gate (always stops)
 
@@ -75,7 +74,8 @@ Stop after `/grill-with-docs` and ask:
    - **Autopilot** — run to completion. Stops only for completion, hard blockers, genuinely
      unforeseen decisions, or budget trips. See `references/autonomy.md` for full stop conditions.
 3. **Execution policy** (optional) — `cost_optimized` (default) or `time_optimized`.
-   See `references/autonomy.md` for rationale.
+   Reasoning-tier agents write file contracts; standard-tier handles routine contract review;
+   cheaper tiers write first-pass production code. See `references/autonomy.md` for full rationale.
 
 Budget guard fields (set at the post-grill gate, defaults in `references/autonomy.md`):
 `max_milestones_unattended` (default 8), `max_pipeline_reentries` (default 3), `token_budget` (optional).
@@ -87,7 +87,7 @@ Check for model-tier config in this order: `.killhouse/config.local.json`, `.kil
 If neither exists: use the current runtime model for every tier, record `model_routing: current-model-only`.
 
 If config exists: `model_tiers.fast`, `.standard`, and `.reasoning` must all be non-empty strings.
-Treat values as exact opaque runtime model ids — do not alias, normalize, or substitute. Echo the
+Treat values as exact opaque runtime model ids. Do not alias, normalize, upgrade, downgrade, or substitute model names. Echo the
 resolved map before running:
 
 ```yaml
@@ -98,7 +98,7 @@ model_tiers:
 model_routing: configured | current-model-only | unavailable
 ```
 
-If config is invalid, stop and ask the user to fix or remove it. If model routing is unavailable in
+If config is invalid (missing tiers or not non-empty strings), stop and ask the user to fix or remove it — "If a config exists but is invalid" do not silently fall back. If model routing is unavailable in
 the runtime, record `model_routing: unavailable`.
 
 ## Context hygiene
@@ -122,7 +122,8 @@ the runtime, record `model_routing: unavailable`.
 ## Trivial fast path
 
 When `/classify` returns trivial, skip grilling and route straight to `loops/IMPLEMENT_MILESTONE`
-with a minimal milestone (outcome + one acceptance gate). No `implementation_contracts` needed.
+with a minimal milestone (outcome + one acceptance gate). The minimal milestone does not need
+`implementation_contracts`; implement directly from scope and gates.
 Ask Checkpoint-or-Autopilot before running. Escalate to the full flow if the change crosses a
 mandatory-gate boundary, requires a new public surface, or needs architecture judgment.
 

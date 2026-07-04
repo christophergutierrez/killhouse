@@ -94,7 +94,7 @@
       "checks": [
         {
           "type": "contains",
-          "path": ".claude-plugin/plugin.json",
+          "path": "plugin.json",
           "text": "skill-review"
         },
         {

@@ -69,7 +69,12 @@ def run_evolve(args: argparse.Namespace) -> Path:
             file=sys.stderr,
         )
     print(f"[info] evolving in {REDQUEEN_DIR} -> {out_dir}", file=sys.stderr)
-    proc = subprocess.run(cmd, cwd=REDQUEEN_DIR, env=env)
+    try:
+        proc = subprocess.run(cmd, cwd=REDQUEEN_DIR, env=env)
+    except FileNotFoundError:
+        die(2,
+            "[error] uv not found. Install it: https://docs.astral.sh/uv/\n"
+            "        Then re-run: bin/evolve_exec_prompt.py ...")
     if proc.returncode != 0:
         sys.exit(2)
     return out_dir / "champions.json"
@@ -134,21 +139,20 @@ def main() -> None:
     fitness = champ.get("fitness", 0.0)
 
     prompt_out = Path(args.prompt_out).resolve()
+
+    if fitness == 0.0:
+        die(3,
+            f"[warn] champion fitness is 0.0 — mock run or no improvement found.\n"
+            f"       Prompt NOT written. IMPLEMENT_MILESTONE will use a plain implementer prompt.\n"
+            f"       Re-run with a real model endpoint to get a meaningful evolved prompt.")
+
     header = (
         "<!-- Evolved by redqueen (Digital Red Queen). Consumed by loops/IMPLEMENT_MILESTONE "
         f"as REDQUEEN_PROMPT. domain={args.domain} round={champ.get('round')} fitness={fitness} "
         f"source={champions_path} -->\n\n"
     )
     prompt_out.write_text(header + champ["genome"].rstrip() + "\n")
-
     print(f"[ok] wrote execution prompt -> {prompt_out} (round={champ.get('round')}, fitness={fitness})")
-    if fitness == 0.0:
-        print(
-            "[warn] champion fitness is 0.0 — this is a mock run or the evolution found no "
-            "improvement. The prompt is NOT meaningfully evolved; IMPLEMENT_MILESTONE should "
-            "treat REDQUEEN_PROMPT as absent and use a plain implementer prompt.",
-            file=sys.stderr,
-        )
 
 
 if __name__ == "__main__":

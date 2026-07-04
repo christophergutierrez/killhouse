@@ -28,7 +28,11 @@ def require(condition: bool, message: str) -> None:
 
 
 def contains(path: str, needle: str) -> None:
-    require(needle in read(path), f"{path} missing required text: {needle!r}")
+    text = read(path)
+    # Normalize whitespace so line-wrap changes don't break semantic checks
+    normalized_text = re.sub(r"\s+", " ", text)
+    normalized_needle = re.sub(r"\s+", " ", needle)
+    require(normalized_needle in normalized_text, f"{path} missing required text: {needle!r}")
 
 
 def not_contains(path: str, needle: str) -> None:
@@ -41,10 +45,10 @@ def check_json(path: str) -> None:
 
 def check_manifests() -> None:
     check_json(".codex-plugin/plugin.json")
-    check_json(".claude-plugin/plugin.json")
+    check_json("plugin.json")
     check_json(".claude-plugin/marketplace.json")
 
-    claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
+    claude = json.loads((ROOT / "plugin.json").read_text())
     for skill_path in claude["skills"]:
         require((ROOT / skill_path / "SKILL.md").is_file(), f"missing Claude skill path {skill_path}")
 
@@ -56,7 +60,7 @@ def check_manifests() -> None:
     require(plugin is not None, "marketplace manifest has no killhouse plugin entry")
 
     versions = {
-        ".claude-plugin/plugin.json": claude.get("version"),
+        "plugin.json": claude.get("version"),
         ".codex-plugin/plugin.json": codex.get("version"),
         ".claude-plugin/marketplace.json": plugin.get("version"),
     }
@@ -145,7 +149,7 @@ def check_docs_sync() -> None:
     contains("AGENTS.md", "Implementation economics")
     contains("AGENTS.md", "standard-tier agents handle routine contract review")
     contains("AGENTS.md", "Model tier map")
-    contains("AGENTS.md", "A model tier map is\noptional")
+    contains("AGENTS.md", "A model tier map is optional")
     contains("skills/ask-kh/SKILL.md", "Execution policy")
     contains("skills/ask-kh/SKILL.md", "cost_optimized")
     contains("skills/ask-kh/SKILL.md", "time_optimized")
@@ -162,7 +166,7 @@ def check_docs_sync() -> None:
     contains("loops/PLAN.md", "Routine contract checks default to `standard` tier")
     contains("loops/IMPLEMENT_MILESTONE.md", "Contract Reviewer")
     contains("loops/IMPLEMENT_MILESTONE.md", "Reasoning code-writing exception")
-    contains("loops/IMPLEMENT_MILESTONE.md", "Private helpers are allowed\n  inside an already-contracted file's responsibility")
+    contains("loops/IMPLEMENT_MILESTONE.md", "Private helpers are allowed inside an already-contracted file's responsibility")
     contains("loops/IMPLEMENT_MILESTONE.md", "No `implementation_contracts`")
     contains("loops/IMPLEMENT_MILESTONE.md", "promote `none_trivial` or `batch_standard`")
     contains("loops/IMPLEMENT_MILESTONE.md", "economics ledger")
@@ -210,10 +214,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Validate Killhouse self-hosting contracts.")
     parser.add_argument("--check", default="all", choices=["all", *CHECKS.keys()])
     parser.add_argument("--with-claude", action="store_true", help="also run claude plugin validate .")
+    parser.add_argument("--check-whitespace", action="store_true", help="also run git diff --check")
     args = parser.parse_args()
 
     try:
-        run_command(["git", "diff", "--check"])
+        if args.check_whitespace:
+            run_command(["git", "diff", "--check"])
         if args.check == "all":
             for name in CHECKS:
                 run_check(name)

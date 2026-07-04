@@ -108,9 +108,9 @@ Killhouse enforces a strict, multi-stage gauntlet for feature development. For t
 
 ```mermaid
 graph TD
-    A[Start] --> B{/triage}
-    B -->|Trivial Bug| G
-    B -->|Major Feature| C[/grill-with-docs + /to-prd/]
+    A[Start] --> B{/classify}
+    B -->|Trivial| G
+    B -->|Major| C[/grill-with-docs + /to-prd/]
     
     C --> D[REVIEW_DOCUMENT.md]
     D -->|9-Agent Audit Loop| D
@@ -133,7 +133,7 @@ graph TD
     I --> J[Done]
 ```
 
-1. **Triage** (`skills/triage/SKILL.md`): Determines task complexity and routes trivial vs. major.
+1. **Classify** (`skills/classify/SKILL.md`): Determines task complexity and routes trivial vs. major. Use `/triage` instead when the request comes from a GitHub issue or PR.
 2. **Discovery** (`skills/grill-with-docs/SKILL.md` and `skills/to-prd/SKILL.md`): Establishes the domain model and synthesizes the Product Requirements Document (PRD).
 3. **Spec Audit** (`loops/REVIEW_DOCUMENT.md`): A 9-subagent loop that computes arithmetic, checks assumptions, and enforces narrative flow until the PRD reaches convergence.
 4. **Planning** (`loops/PLAN.md`): Does not write code. Generates an `implementation-plan.md` with traceability matrices and falsifiable terminal gates.
@@ -157,7 +157,7 @@ In Codex, ask for the same skill by name:
 ```
 
 The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost, classify the request through
-`/triage` in Claude Code or the `triage` skill in Codex, and then route either to the trivial fast path
+`/classify` in Claude Code or the `classify` skill in Codex, and then route either to the trivial fast path
 or the full grilling-to-implementation pipeline.
 
 ## Operating Principles

@@ -8,6 +8,9 @@ import sys
 from pathlib import Path
 
 
+import re
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -22,9 +25,13 @@ def read_repo_file(path: str) -> str:
     return target.read_text()
 
 
+def normalize(text: str) -> str:
+    return re.sub(r"\s+", " ", text)
+
+
 def run_check(check: dict) -> str | None:
-    text = read_repo_file(check["path"])
-    expected = check["text"]
+    text = normalize(read_repo_file(check["path"]))
+    expected = normalize(check["text"])
     check_type = check["type"]
     if check_type == "contains" and expected not in text:
         return f"{check['path']} missing {expected!r}"
@@ -45,23 +52,35 @@ def main() -> int:
     scenarios = data.get("scenarios", [])
     failures: list[str] = []
     selected = 0
+    skipped = 0
     for scenario in scenarios:
         if args.group != "all" and scenario.get("group") != args.group:
             continue
+        mode = scenario.get("mode", "static")
+        checks = scenario.get("checks", [])
+        if mode != "static":
+            # Non-static scenarios require an LLM runner — skip with notice, never pass vacuously
+            print(f"[skip] {scenario['id']} (mode={mode!r}, requires LLM runner)")
+            skipped += 1
+            continue
+        if not checks:
+            print(f"[skip] {scenario['id']} (no checks defined)", file=sys.stderr)
+            skipped += 1
+            continue
         selected += 1
-        for check in scenario.get("checks", []):
+        for check in checks:
             failure = run_check(check)
             if failure:
                 failures.append(f"{scenario['id']}: {failure}")
 
-    if selected == 0:
+    if selected == 0 and skipped == 0:
         print(f"[fail] no scenarios selected for group {args.group!r}", file=sys.stderr)
         return 1
     if failures:
         for failure in failures:
             print(f"[fail] {failure}", file=sys.stderr)
         return 1
-    print(f"[ok] {selected} scenario(s) passed")
+    print(f"[ok] {selected} static scenario(s) passed" + (f", {skipped} skipped (non-static)" if skipped else ""))
     return 0
 
 

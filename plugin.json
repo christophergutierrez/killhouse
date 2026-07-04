@@ -8,14 +8,14 @@
   },
   "homepage": "https://github.com/christophergutierrez/killhouse",
   "skills": [
-    "../skills/ask-kh",
-    "../skills/install-killhouse",
-    "../skills/classify",
-    "../skills/triage",
-    "../skills/skill-review",
-    "../skills/grill-with-docs",
-    "../skills/grilling",
-    "../skills/domain-modeling",
-    "../skills/to-prd"
+    "./skills/ask-kh",
+    "./skills/install-killhouse",
+    "./skills/classify",
+    "./skills/triage",
+    "./skills/skill-review",
+    "./skills/grill-with-docs",
+    "./skills/grilling",
+    "./skills/domain-modeling",
+    "./skills/to-prd"
   ]
 }
