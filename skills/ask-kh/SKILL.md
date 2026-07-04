@@ -214,8 +214,11 @@ needed to proceed:
 
 When `/triage` classifies the request as trivial, skip the front end and grilling entirely and route
 straight to `loops/IMPLEMENT_MILESTONE` with a minimal milestone (outcome + acceptance gate). The
-autonomy setting still applies: ask Checkpoint-or-Autopilot before running. Escalate back into the full
-flow the moment the "trivial" change turns out to touch a mandatory-gate boundary.
+minimal milestone does not need `implementation_contracts`; the implementer works directly from
+`implementation_scope`, `acceptance_gates`, and the trivial task description. The autonomy setting still
+applies: ask Checkpoint-or-Autopilot before running. Escalate back into the full flow the moment the
+"trivial" change turns out to touch a mandatory-gate boundary, require a new production file/public
+surface, or need architecture judgment.
 
 ## State to carry across the run
 

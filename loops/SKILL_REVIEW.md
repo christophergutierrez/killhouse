@@ -95,7 +95,8 @@ the boundary is the instruction contract and artifact handoff, not only a callab
    cross-cutting-refactor, or no-routing exception.
 15. **Contract economy**: Contract depth and review cadence scale with risk. Routine contract review does
    not require reasoning tier on every slice. Private helpers inside an already-contracted responsibility
-   do not force replan; new public/exported surfaces or scope expansion do.
+   do not force replan; new public/exported surfaces or scope expansion do. Light/trivial paths may omit
+   file contracts and implement directly from scope plus gates.
 16. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
    blast-radius decisions, and human-confirmation points remain enforceable.
 17. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
@@ -175,11 +176,12 @@ Safety is a gate, not a score. Any critical safety failure disqualifies the chan
   that should be split into focused skills, missing capability tier for a role where tier matters,
   expensive/reasoning-tier delegation for mechanical work without justification, reasoning-tier
   contract review required on every slice without a risk trigger, reasoning-tier production-code writing
-  as the default path instead of contract/review feedback, over-rigid contracts that force replan for
-  private helpers inside an already-contracted responsibility, missing model-routing fallback, inline
-  work chosen without a brief justification where delegation would preserve context, execution-policy
-  wording that implies different quality gates for cost/time modes, loose model-tier mapping that
-  permits aliases or unreported substitutions,
+  as the default path instead of contract/review feedback, full per-file contracts required for every
+  light/trivial change, over-rigid contracts that force replan for private helpers inside an
+  already-contracted responsibility, missing model-routing fallback, inline work chosen without a brief
+  justification where delegation would preserve context, execution-policy wording that implies different
+  quality gates for cost/time modes, loose model-tier mapping that permits aliases or unreported
+  substitutions,
   or wording likely to make agents over- or under-apply a stage.
 - **Minor**: Non-blocking clarity, naming consistency, discoverability, or formatting issue that does not
   change execution semantics.
@@ -373,6 +375,8 @@ Run what is available and record unavailable tools as risks, not silent skips.
 - Flag contract schemas that require the same detail for trivial adapters and hard algorithms. Hard
   algorithms need examples, invariants, edge cases, counterexamples, or pseudocode; trivial wiring does
   not.
+- Flag instruction sets where the trivial/light path can reach implementation without
+  `implementation_contracts` but the implementation loop has no explicit absent-contract behavior.
 - Flag fast/low-capability agents assigned to safety gates, synthesis, final approval, or architecture
   decisions as Blocking when that assignment could produce an unsafe pass.
 - If model routing is unavailable, the current model may run every role, but the verdict records the

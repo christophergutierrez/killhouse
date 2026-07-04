@@ -132,7 +132,13 @@ Reasoning-tier agents write implementation contracts by default, not production 
 architecture, decomposition, file contracts, risk decisions, review feedback, and escalation
 judgment. Assign first-pass production code to the cheapest capable `fast` or `standard` tier.
 
-For each file the executor may change, the plan must provide a file contract:
+Scale contracts by task tier:
+
+- **light**: file contracts are optional. Use an inline `thin` contract only when it prevents ambiguity;
+  otherwise the executor may work directly from `implementation_scope` and `acceptance_gates`.
+- **standard/full**: provide file contracts for every production file the executor may create or modify.
+
+When required or useful, a file contract contains:
 
 - path and responsibility;
 - contract_depth: `thin` | `detailed` | `algorithmic`;
@@ -550,8 +556,9 @@ Cheap per-pass subset: <ids>. Full suite at: phase-end / final.
 #### Milestone: <stable-slug>
 - outcome (observable, not an activity) / traces_to (standard+) / implementation_scope / dependencies
 - tracer_bullet: yes | no | prerequisite | not_applicable, with rationale
-- implementation_contracts: per-file path, responsibility, contract_depth, public symbols/signatures,
-  behavior, invariants, gates, allowed private/test helpers, forbidden edits, contract_review cadence
+- implementation_contracts: optional for light; standard+ per-file path, responsibility, contract_depth,
+  public symbols/signatures, behavior, invariants, gates, allowed private/test helpers, forbidden edits,
+  contract_review cadence
 - subagent_work: role, tier, delegate, policy_rationale, escalation_trigger, scope, inputs, required output
 - acceptance_gates: exact commands + expected results + baseline_polarity + post_condition + evidence
 - gate_failure_reasoning / invariants_at_risk / evidence_to_record / rollback_unit / stop_conditions

@@ -145,6 +145,11 @@
         {
           "type": "contains",
           "path": "loops/PLAN.md",
+          "text": "**light**: file contracts are optional"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
           "text": "contract_depth"
         },
         {
@@ -160,7 +165,17 @@
         {
           "type": "contains",
           "path": "loops/IMPLEMENT_MILESTONE.md",
-          "text": "Private helpers inside an already-contracted file"
+          "text": "Private helpers are allowed\n  inside an already-contracted file's responsibility"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "No `implementation_contracts`"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "promote `none_trivial` or `batch_standard`"
         },
         {
           "type": "contains",

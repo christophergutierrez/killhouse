@@ -21,8 +21,9 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
 - **MILESTONE**: One atomic milestone from `PLAN.md`'s handoff (sec 17/18). It carries:
   - `outcome` (observable, not an activity) and `implementation_scope` — the only files/behavior this loop may touch;
   - `acceptance_gates` — exact commands + expected results + `baseline_polarity` + `post_condition` + evidence;
-  - `implementation_contracts` — per-file path, responsibility, public symbols/signatures, expected
-    behavior, invariants, gates, and forbidden edits;
+  - `implementation_contracts` — optional for trivial/light milestones; for standard/full milestones,
+    per-file path, responsibility, public symbols/signatures, expected behavior, invariants, gates, and
+    forbidden edits;
   - `invariants_at_risk` — the invariant ids this milestone could break, each with scope and `baseline_polarity`;
   - `dependencies`, `evidence_to_record`, `rollback_unit`, `stop_conditions`, `gate_failure_reasoning`.
 - **REDQUEEN_PROMPT**: The evolved, adversarially-tested system prompt produced by the `lib/redqueen`
@@ -51,11 +52,13 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
 - **Vertical slices, not horizontal layers.** Build one thin end-to-end slice (the smallest behavior a
   single gate or sub-behavior can observe), not all of one layer then all of the next. Each slice is a
   tracer bullet that responds to what the last one taught you.
-- **Contracts before code.** Implement against the milestone's `implementation_contracts`, but do not
-  make TDD brittle. Private helpers inside an already-contracted file's responsibility, and test helpers
-  scoped to the current slice, are allowed when recorded in the slice evidence. A new production file,
-  exported/public symbol, persisted or wire behavior, dependency, or edit outside `implementation_scope`
-  requires a contract update or replan.
+- **Contracts scale by tier.** For standard/full milestones, implement against
+  `implementation_contracts`. For trivial/light milestones with no contracts, implement directly against
+  `implementation_scope`, `acceptance_gates`, and the task description. Private helpers are allowed
+  inside an already-contracted file's responsibility, and test helpers scoped to the current slice are
+  allowed when recorded in the slice evidence. A new production file, exported/public symbol, persisted
+  or wire behavior, dependency, or edit outside `implementation_scope` requires a contract update or
+  replan.
 - **Standard reviews; cheaper tiers code first.** Routine contract checks default to `standard` tier.
   Reasoning-tier agents review only when risk or ambiguity justifies it, and do not perform first-pass
   production-code edits. First-pass code goes to the cheapest capable `fast` or `standard` tier under
@@ -113,11 +116,11 @@ Before any slice:
   red-green-refactor cycle for one slice — writes the failing test, the minimal code to pass it, then
   refactors the slice. Keeps edits inside `implementation_scope` and `implementation_contracts`.
 - **Contract Reviewer** *(standard by default; reasoning on escalation)*: Reviews the diff against the
-  file contracts after green or at the approved batch point. Returns `PASS` or concrete feedback tied to
-  contract clauses, gates, or forbidden edits. Escalate to reasoning only for high-risk slices,
-  ambiguous contracts, security/safety/public-contract surfaces, repeated rejection, or architecture
-  judgment. Does not write production code unless the reasoning code-writing exception is explicitly
-  triggered.
+  file contracts, or against `implementation_scope` and gates when contracts are absent, after green or
+  at the approved batch point. Returns `PASS` or concrete feedback tied to contract clauses, scope,
+  gates, or forbidden edits. Escalate to reasoning only for high-risk slices, ambiguous contracts,
+  security/safety/public-contract surfaces, repeated rejection, or architecture judgment. Does not write
+  production code unless the reasoning code-writing exception is explicitly triggered.
 - **Gate Verifier**: Runs the milestone's `acceptance_gates` and the plan's invariant checks as raw
   terminal commands, captures their output verbatim, and judges pass/fail strictly on the `post_condition`
   and `baseline_polarity` flip. Does not edit code and does not rationalize partial output as success.
@@ -141,8 +144,8 @@ Each slice the Slicer emits uses this shape:
   red_command: exact command expected to FAIL before this slice (baseline_polarity: fail)
   green_condition: the terminal result that proves this slice's behavior exists
   scope_files: files within implementation_scope this slice may touch
-  contracts_used: implementation_contract ids or file paths this slice is allowed to satisfy
-  contract_review: batch_standard | per_slice_standard | reasoning_escalation
+  contracts_used: implementation_contract ids, file paths, or "none_trivial"
+  contract_review: none_trivial | batch_standard | per_slice_standard | reasoning_escalation
   invariants_touched: at-risk invariant ids this slice could affect
 ```
 
@@ -161,12 +164,16 @@ For each slice, in order:
    exhaustion, roll back this slice only and halt `SLICE_STUCK` with the failing output.
 3. **Refactor.** Improve only the code this slice introduced, re-running `red_command` after each change to
    keep it green. Do not touch un-sliced behavior. Do not add functionality.
-4. **Contract review.** Run the slice's declared `contract_review`. Use `per_slice_standard` for normal
-   slices, `batch_standard` for low-risk reversible slices whose gates are independent, and
-   `reasoning_escalation` only when the escalation conditions are met. If feedback is concrete and
-   inside scope, the Implementer applies one repair attempt and re-runs the green command. If feedback
-   requires a new production file, public/exported symbol, broader scope, architecture choice, or
-   repeated failure, halt for escalation/replan instead of improvising.
+4. **Contract review.** Run the slice's declared `contract_review`. Use `none_trivial` only for
+   trivial/light slices with no contracts and no newly discovered risk. Use `per_slice_standard` for
+   normal contracted slices, `batch_standard` for low-risk reversible slices whose gates are independent,
+   and `reasoning_escalation` only when escalation conditions are met. If risk appears mid-slice,
+   promote `none_trivial` or `batch_standard` to `per_slice_standard`, and promote to
+   `reasoning_escalation` for ambiguity, safety/security/public-contract exposure, repeated rejection,
+   or architecture judgment. If feedback is concrete and inside scope, the Implementer applies one repair
+   attempt and re-runs the green command. If feedback requires a new production file, public/exported
+   symbol, broader scope, architecture choice, or repeated failure, halt for escalation/replan instead of
+   improvising.
 5. **Guard.** Run the cheap per-pass invariant subset from the plan. If any regresses, roll back this
    slice only and halt `INVARIANT_REGRESSION` with the offending invariant id and output.
 
@@ -245,6 +252,7 @@ gate — surface it as a defect against the plan.
 | --- | --- |
 | No subagents | Run Slicer, Implementer, Contract Reviewer, and Gate Verifier as labeled inline passes; keep gate output raw and sequential. |
 | No model routing | Use labeled roles with the current model. Preserve the rule that Contract Reviewer feedback happens before any reasoning-tier code-writing exception. |
+| No `implementation_contracts` | Allowed only for trivial/light milestones. Implement directly against `implementation_scope`, `acceptance_gates`, and the task description. If the work requires a new production file, public/exported symbol, persisted or wire behavior, dependency, broader scope, or architecture judgment, halt for PLAN instead of inventing contracts. |
 | No `REDQUEEN_PROMPT` | Proceed with a plain implementer system prompt; record that robustness evolution was skipped as a risk. |
 | Weak shell access | Run `dry-run`: emit the slice plan and the exact gate commands with expected results for a human to run; mark gates unverified. |
 | No version control | Snapshot `rollback_unit` files before each slice; express rollback as restoring those copies. |
