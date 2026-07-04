@@ -170,6 +170,16 @@ or the full grilling-to-implementation pipeline.
   high-risk review; standard-tier agents do routine contract checks, and cheaper capable tiers do
   first-pass production coding unless an explicit rescue or safety exception is recorded.
 
+## Releasing
+
+When skills, loops, or plugin manifests change, bump the plugin version before publishing so runtime
+plugin caches can detect the update:
+
+```bash
+bin/bump_plugin_version.py --patch
+bin/killhouse_validate.py --check manifests
+```
+
 ## Credits
 
 A big thank-you to [Matt Pocock](https://github.com/mattpocock) — the front end of this pipeline stands on his work. The grilling, domain-modeling, and PRD skills come straight from his excellent [mattpocock/skills](https://github.com/mattpocock/skills) repo; Killhouse just wraps them in a heavier, more opinionated gauntlet. Go read the original — it's worth your time.

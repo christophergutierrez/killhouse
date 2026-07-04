@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?$")
 
 
 class CheckFailure(Exception):
@@ -48,6 +50,19 @@ def check_manifests() -> None:
 
     codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
     require((ROOT / codex["skills"]).is_dir(), "Codex skills directory does not exist")
+
+    marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
+    plugin = next((item for item in marketplace["plugins"] if item.get("name") == "killhouse"), None)
+    require(plugin is not None, "marketplace manifest has no killhouse plugin entry")
+
+    versions = {
+        ".claude-plugin/plugin.json": claude.get("version"),
+        ".codex-plugin/plugin.json": codex.get("version"),
+        ".claude-plugin/marketplace.json": plugin.get("version"),
+    }
+    require(len(set(versions.values())) == 1, f"plugin manifest versions differ: {versions}")
+    version = next(iter(versions.values()))
+    require(isinstance(version, str) and SEMVER.match(version) is not None, f"invalid plugin version: {version}")
 
 
 def check_model_config() -> None:
@@ -105,6 +120,7 @@ def check_delegation() -> None:
 
 def check_install() -> None:
     contains("skills/install-killhouse/SKILL.md", "claude plugin validate .")
+    contains("skills/install-killhouse/SKILL.md", "bin/bump_plugin_version.py --patch")
     contains("skills/install-killhouse/SKILL.md", "codex plugin marketplace add .")
     contains("skills/install-killhouse/SKILL.md", "codex plugin add killhouse@")
     contains("README.md", "codex plugin marketplace add .")

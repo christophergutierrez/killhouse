@@ -124,6 +124,11 @@ Tell the user exactly what happened:
 - **Already installed** → offer the runtime's update/reinstall flow instead of re-installing from
   scratch. In Claude Code, use `claude plugin update killhouse`; in Codex, reinstall from the
   marketplace after updating the plugin cache/version as required by the local Codex workflow.
+- **Publishing changed skills or manifests** → bump the plugin version before telling users to update.
+  Use `bin/bump_plugin_version.py --patch` for normal iteration, or pass an exact version such as
+  `bin/bump_plugin_version.py 0.2.0`. The script updates the Claude plugin manifest, Claude marketplace
+  entry, and Codex plugin manifest together; `bin/killhouse_validate.py --check manifests` verifies they
+  stay in sync.
 - **Validation check** (optional, before install) → in Claude Code, `claude plugin validate .` from the
   repo root confirms the Claude manifest is well-formed. In Codex, validate `.codex-plugin/plugin.json`
   with the available Codex plugin validator or at least parse it as JSON before install.
