@@ -183,7 +183,8 @@ def check_docs_sync() -> None:
 def check_redqueen() -> None:
     contains("AGENTS.md", "optional and self-degrading")
     contains("skills/ask-kh/SKILL.md", "degrades to a plain implementer prompt")
-    contains("bin/evolve_exec_prompt.py", "Exit codes: 0 ok; 2 redqueen run/extract failed; 3 no usable champion")
+    contains("bin/evolve_exec_prompt.py", "Exit codes: 0 ok; 2 redqueen run/extract failed; 3 no usable champion or fitness==0.0")
+    contains("bin/evolve_exec_prompt.py", "--mock always exits 0")
 
 
 CHECKS = {

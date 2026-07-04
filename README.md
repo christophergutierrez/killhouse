@@ -10,7 +10,7 @@ Instead of loading massive prompts into your main agent session—which burns to
 
 Killhouse ships plugin manifests for both Claude Code and Codex:
 
-- Claude Code: `.claude-plugin/plugin.json`
+- Claude Code: `plugin.json` (at repo root)
 - Codex: `.codex-plugin/plugin.json`
 
 The pipeline itself is plain Markdown. If a runtime can read files, run shell commands, and follow

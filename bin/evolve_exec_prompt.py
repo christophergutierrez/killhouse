@@ -22,8 +22,9 @@ with the highest held-out fitness (ties broken by latest round).
 Real runs need a model endpoint (the worker generates patches, the evolver mutates prompts):
   OPENAI_BASE_URL=http://localhost:11434/v1  DRQ_MODEL=qwen2.5-coder:32b   OPENAI_API_KEY=ollama
 
-Exit codes: 0 ok; 2 redqueen run/extract failed; 3 no usable champion (caller should
-degrade to a plain implementer prompt, per IMPLEMENT_MILESTONE's degradation table).
+Exit codes: 0 ok; 2 redqueen run/extract failed; 3 no usable champion or fitness==0.0 on a real
+run (caller should degrade to a plain implementer prompt). --mock always exits 0 to confirm
+plumbing; the prompt is intentionally not written since fitness will be 0.0.
 """
 from __future__ import annotations
 
@@ -137,6 +138,11 @@ def main() -> None:
     champions_path = Path(args.champions).resolve() if args.champions else run_evolve(args)
     champ = best_champion(champions_path)
     fitness = champ.get("fitness", 0.0)
+
+    if args.mock:
+        # Mock runs confirm plumbing only; fitness is always 0.0 by design, prompt not written.
+        print(f"[ok] plumbing verified (mock); prompt intentionally not written (fitness={fitness})")
+        return
 
     prompt_out = Path(args.prompt_out).resolve()
 

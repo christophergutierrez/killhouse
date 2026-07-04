@@ -13,7 +13,7 @@ SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z
 CORE_SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 
 MANIFEST_PATHS = [
-    ".claude-plugin/plugin.json",
+    "plugin.json",
     ".codex-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
 ]
@@ -28,14 +28,14 @@ def write_json(path: str, data: dict) -> None:
 
 
 def manifest_versions() -> dict[str, str]:
-    claude = read_json(".claude-plugin/plugin.json")
+    claude = read_json("plugin.json")
     codex = read_json(".codex-plugin/plugin.json")
     marketplace = read_json(".claude-plugin/marketplace.json")
     plugin = next((item for item in marketplace["plugins"] if item.get("name") == "killhouse"), None)
     if plugin is None:
         raise SystemExit("marketplace manifest has no killhouse plugin entry")
     return {
-        ".claude-plugin/plugin.json": claude["version"],
+        "plugin.json": claude["version"],
         ".codex-plugin/plugin.json": codex["version"],
         ".claude-plugin/marketplace.json": plugin["version"],
     }
@@ -71,9 +71,9 @@ def set_version(version: str) -> None:
     if not SEMVER.match(version):
         raise SystemExit(f"target version is not semver-like: {version}")
 
-    claude = read_json(".claude-plugin/plugin.json")
+    claude = read_json("plugin.json")
     claude["version"] = version
-    write_json(".claude-plugin/plugin.json", claude)
+    write_json("plugin.json", claude)
 
     codex = read_json(".codex-plugin/plugin.json")
     codex["version"] = version
