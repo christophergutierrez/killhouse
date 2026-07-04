@@ -1,19 +1,21 @@
 {
   "name": "killhouse",
   "description": "A rigorous, unforgiving AI pipeline where code is planned, tested, and audited without mercy.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": {
     "name": "Chris Gutierrez",
     "email": "chris@gutierrez.ai"
   },
   "homepage": "https://github.com/christophergutierrez/killhouse",
   "skills": [
-    "./skills/ask-kh",
-    "./skills/install-killhouse",
-    "./skills/triage",
-    "./skills/grill-with-docs",
-    "./skills/grilling",
-    "./skills/domain-modeling",
-    "./skills/to-prd"
+    "../skills/ask-kh",
+    "../skills/install-killhouse",
+    "../skills/classify",
+    "../skills/triage",
+    "../skills/skill-review",
+    "../skills/grill-with-docs",
+    "../skills/grilling",
+    "../skills/domain-modeling",
+    "../skills/to-prd"
   ]
 }

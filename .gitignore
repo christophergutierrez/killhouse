@@ -11,3 +11,6 @@ __pycache__/
 
 # Local Killhouse runtime overrides
 .killhouse/config.local.json
+
+# Pipeline run state (session-local; not committed)
+.killhouse/run-state.json

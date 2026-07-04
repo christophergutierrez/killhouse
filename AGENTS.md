@@ -52,6 +52,10 @@ For changes to active agent-instruction documents rather than application code, 
 `README.md`, plugin manifests, marketplace manifests, install docs, and any document an agent is
 expected to execute as instructions.
 
+In Claude Code, invoke it directly as `/skill-review` (or `/skill-review converge` to review and
+fix). In Codex or generic agents, use the `skill-review` skill by name, or read
+`skills/skill-review/SKILL.md` directly.
+
 ## How references resolve
 
 The skills invoke each other and the loops by name. Resolve them as files:

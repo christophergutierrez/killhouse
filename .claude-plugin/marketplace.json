@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "killhouse",
-      "source": "./",
+      "source": "./.claude-plugin",
       "description": "A rigorous, unforgiving AI pipeline where code is planned, tested, and audited without mercy.",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "license": "MIT",
       "homepage": "https://github.com/christophergutierrez/killhouse"
     }

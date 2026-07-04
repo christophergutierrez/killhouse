@@ -1,9 +1,113 @@
 {
   "scenarios": [
     {
-      "id": "claude-ask-kh-starts-at-triage",
+      "id": "classify-trivial-routing",
       "group": "dev",
-      "description": "Claude Code users keep slash-command entrypoints and ask-kh routes through triage.",
+      "description": "A clearly bounded bug fix routes as trivial and skips grilling.",
+      "mode": "forced",
+      "prompt": "Use classify for this: fix a typo in an error message in one file.",
+      "expected_output_contains": "classification: trivial",
+      "pass_criteria": "Response contains 'classification: trivial' and does not mention grill-with-docs or PRD"
+    },
+    {
+      "id": "classify-major-routing",
+      "group": "dev",
+      "description": "A request touching public API routes as major and enters grill-with-docs.",
+      "mode": "forced",
+      "prompt": "Use classify for this: add a new authentication flow with a new database table.",
+      "expected_output_contains": "classification: major",
+      "pass_criteria": "Response contains 'classification: major' and rationale mentions public contract or migrations"
+    },
+    {
+      "id": "ask-kh-instruction-doc-routes-to-skill-review",
+      "group": "dev",
+      "description": "A request to change a SKILL.md routes to SKILL_REVIEW not the code pipeline.",
+      "mode": "forced",
+      "prompt": "Use ask-kh for this: improve the grilling skill to ask better questions.",
+      "expected_output_contains": "SKILL_REVIEW",
+      "pass_criteria": "Response routes to loops/SKILL_REVIEW.md, not to classify or grill-with-docs"
+    },
+    {
+      "id": "ask-kh-resume-state-file",
+      "group": "dev",
+      "description": "ask-kh checks for .killhouse/run-state.json on startup.",
+      "mode": "static",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/SKILL.md",
+          "text": ".killhouse/run-state.json"
+        },
+        {
+          "type": "contains",
+          "path": ".gitignore",
+          "text": "run-state.json"
+        }
+      ]
+    },
+    {
+      "id": "autopilot-budget-guard-fields",
+      "group": "dev",
+      "description": "Budget guard fields are documented with defaults.",
+      "mode": "static",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/references/autonomy.md",
+          "text": "max_milestones_unattended"
+        },
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/references/autonomy.md",
+          "text": "max_pipeline_reentries"
+        },
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/references/autonomy.md",
+          "text": "degrade to Checkpoint mode and ask"
+        }
+      ]
+    },
+    {
+      "id": "mandatory-gate-not-skippable",
+      "group": "held_out",
+      "description": "Mandatory gates halt in Autopilot; Autopilot only skips courtesy checkpoints.",
+      "mode": "static",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/SKILL.md",
+          "text": "Mandatory gates (never skipped, in either mode)"
+        },
+        {
+          "type": "contains",
+          "path": "skills/ask-kh/references/autonomy.md",
+          "text": "Hard blocker"
+        }
+      ]
+    },
+    {
+      "id": "skill-review-directly-invocable",
+      "group": "dev",
+      "description": "SKILL_REVIEW is registered as a slash command and documented for direct invocation.",
+      "mode": "static",
+      "checks": [
+        {
+          "type": "contains",
+          "path": ".claude-plugin/plugin.json",
+          "text": "skill-review"
+        },
+        {
+          "type": "contains",
+          "path": "skills/skill-review/SKILL.md",
+          "text": "loops/SKILL_REVIEW.md"
+        }
+      ]
+    },
+    {
+      "id": "claude-ask-kh-starts-at-classify",
+      "group": "dev",
+      "description": "Claude Code users keep slash-command entrypoints and ask-kh routes through classify for conversation requests.",
       "checks": [
         {
           "type": "contains",
@@ -12,8 +116,8 @@
         },
         {
           "type": "contains",
-          "path": "README.md",
-          "text": "classify the request through\n`/triage`"
+          "path": "skills/ask-kh/SKILL.md",
+          "text": "/classify"
         }
       ]
     },

@@ -1,4 +1,5 @@
 {
+  "_comment": "Model ids are exact opaque strings — use the id your proxy or runtime expects. To discover available ids: check your proxy's /v1/models endpoint, the admin UI, or run `claude models` in Claude Code.",
   "execution_policy": "cost_optimized",
   "model_tiers": {
     "fast": "proxy/exact-fast-model-id",
