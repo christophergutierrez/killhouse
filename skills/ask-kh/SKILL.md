@@ -96,9 +96,12 @@ quality bar:
 
 - `cost_optimized` (default) — prefer the cheapest capable tier for bounded implementation and
   mechanical work. Escalate only after evidence: failed gates, repeated same failure, scope expansion,
-  security/architecture uncertainty, or reviewer rejection.
+  security/architecture uncertainty, or reviewer rejection. Reasoning-tier agents write file contracts;
+  standard-tier agents handle routine contract review; cheaper tiers write first-pass production code.
 - `time_optimized` — prefer stronger tiers earlier when retries would likely cost more wall-clock time
   than they save. Still delegate mechanical checks and independent review to cheaper tiers where safe.
+  Reasoning-tier production-code edits still require an explicit rescue, safety, or cross-cutting
+  refactor exception.
 
 ### Model tier map
 

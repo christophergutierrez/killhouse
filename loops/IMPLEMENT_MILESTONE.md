@@ -8,8 +8,10 @@ The loop builds behavior one slice at a time, proves every test is non-vacuous b
 it pass, and declares the milestone complete only when the plan's own acceptance gates pass in
 the terminal — never on subjective judgment.
 
-This loop implements. It does not plan, re-scope, or review. It consumes a single milestone from
-`PLAN.md`'s downstream handoff and, on success, hands state to `CODE_REVIEW_TRIBUNAL.md`.
+This loop implements. It does not plan, re-scope, or perform broad review. It consumes a single
+milestone from `PLAN.md`'s downstream handoff, implements against the milestone's file contracts,
+runs contract-compliance feedback inside the loop, and on success hands state to
+`CODE_REVIEW_TRIBUNAL.md`.
 
 Run until the milestone's acceptance gates all pass and its at-risk invariants hold, a stop
 condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
@@ -19,6 +21,8 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
 - **MILESTONE**: One atomic milestone from `PLAN.md`'s handoff (sec 17/18). It carries:
   - `outcome` (observable, not an activity) and `implementation_scope` — the only files/behavior this loop may touch;
   - `acceptance_gates` — exact commands + expected results + `baseline_polarity` + `post_condition` + evidence;
+  - `implementation_contracts` — per-file path, responsibility, public symbols/signatures, expected
+    behavior, invariants, gates, and forbidden edits;
   - `invariants_at_risk` — the invariant ids this milestone could break, each with scope and `baseline_polarity`;
   - `dependencies`, `evidence_to_record`, `rollback_unit`, `stop_conditions`, `gate_failure_reasoning`.
 - **REDQUEEN_PROMPT**: The evolved, adversarially-tested system prompt produced by the `lib/redqueen`
@@ -47,6 +51,15 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
 - **Vertical slices, not horizontal layers.** Build one thin end-to-end slice (the smallest behavior a
   single gate or sub-behavior can observe), not all of one layer then all of the next. Each slice is a
   tracer bullet that responds to what the last one taught you.
+- **Contracts before code.** Implement against the milestone's `implementation_contracts`, but do not
+  make TDD brittle. Private helpers inside an already-contracted file's responsibility, and test helpers
+  scoped to the current slice, are allowed when recorded in the slice evidence. A new production file,
+  exported/public symbol, persisted or wire behavior, dependency, or edit outside `implementation_scope`
+  requires a contract update or replan.
+- **Standard reviews; cheaper tiers code first.** Routine contract checks default to `standard` tier.
+  Reasoning-tier agents review only when risk or ambiguity justifies it, and do not perform first-pass
+  production-code edits. First-pass code goes to the cheapest capable `fast` or `standard` tier under
+  the selected execution policy.
 - **Red before green, always.** A test that has never been observed failing is not evidence. Prove the
   test fails for the intended reason before writing code to pass it.
 - **Minimal green.** Write only enough code to make the current failing command pass. No speculative
@@ -68,6 +81,10 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
   bounded, reversible implementation slices and escalate on evidence. Under `time_optimized`, use a
   stronger tier earlier when retries would likely waste wall-clock time. No policy allows replanning,
   scope expansion, or weakening gates inside this loop.
+- **Reasoning code-writing exception.** A reasoning-tier agent may write production code only for a
+  recorded exception: security-critical patch, cross-cutting refactor requiring one coherent author,
+  the same contract failing twice under cheaper implementation, or no meaningful tier routing. Prefer
+  standard-tier contract review, feedback, and a cheaper repair attempt before this exception.
 
 ### Safety Baseline
 
@@ -90,10 +107,17 @@ Before any slice:
 ### Roles
 
 - **Slicer**: Decomposes `MILESTONE` into an ordered list of vertical slices, each mapped to the gate or
-  sub-behavior it advances. Confirms the seam each slice is tested at. Does not write production code.
-- **Implementer** *(runs under `REDQUEEN_PROMPT`)*: Executes the red-green-refactor cycle for one slice —
-  writes the failing test, the minimal code to pass it, then refactors the slice. Keeps edits inside
-  `implementation_scope`.
+  sub-behavior it advances. Confirms the seam each slice is tested at and which file contracts the slice
+  uses. Does not write production code.
+- **Implementer** *(fast/standard by default; runs under `REDQUEEN_PROMPT`)*: Executes the
+  red-green-refactor cycle for one slice — writes the failing test, the minimal code to pass it, then
+  refactors the slice. Keeps edits inside `implementation_scope` and `implementation_contracts`.
+- **Contract Reviewer** *(standard by default; reasoning on escalation)*: Reviews the diff against the
+  file contracts after green or at the approved batch point. Returns `PASS` or concrete feedback tied to
+  contract clauses, gates, or forbidden edits. Escalate to reasoning only for high-risk slices,
+  ambiguous contracts, security/safety/public-contract surfaces, repeated rejection, or architecture
+  judgment. Does not write production code unless the reasoning code-writing exception is explicitly
+  triggered.
 - **Gate Verifier**: Runs the milestone's `acceptance_gates` and the plan's invariant checks as raw
   terminal commands, captures their output verbatim, and judges pass/fail strictly on the `post_condition`
   and `baseline_polarity` flip. Does not edit code and does not rationalize partial output as success.
@@ -103,8 +127,8 @@ capture raw and separate from the Implementer's narration.
 
 When tier routing is available, follow the milestone's `subagent_work` tier and escalation trigger. If a
 cost-optimized implementation attempt fails the same gate twice, touches scope boundaries, needs a
-security/architecture decision, or is rejected by review, stop and escalate rather than spending more
-cheap attempts.
+security/architecture decision, or is rejected by contract review, stop and escalate rather than
+spending more cheap attempts.
 
 ### Slice Schema
 
@@ -117,6 +141,8 @@ Each slice the Slicer emits uses this shape:
   red_command: exact command expected to FAIL before this slice (baseline_polarity: fail)
   green_condition: the terminal result that proves this slice's behavior exists
   scope_files: files within implementation_scope this slice may touch
+  contracts_used: implementation_contract ids or file paths this slice is allowed to satisfy
+  contract_review: batch_standard | per_slice_standard | reasoning_escalation
   invariants_touched: at-risk invariant ids this slice could affect
 ```
 
@@ -135,7 +161,13 @@ For each slice, in order:
    exhaustion, roll back this slice only and halt `SLICE_STUCK` with the failing output.
 3. **Refactor.** Improve only the code this slice introduced, re-running `red_command` after each change to
    keep it green. Do not touch un-sliced behavior. Do not add functionality.
-4. **Guard.** Run the cheap per-pass invariant subset from the plan. If any regresses, roll back this
+4. **Contract review.** Run the slice's declared `contract_review`. Use `per_slice_standard` for normal
+   slices, `batch_standard` for low-risk reversible slices whose gates are independent, and
+   `reasoning_escalation` only when the escalation conditions are met. If feedback is concrete and
+   inside scope, the Implementer applies one repair attempt and re-runs the green command. If feedback
+   requires a new production file, public/exported symbol, broader scope, architecture choice, or
+   repeated failure, halt for escalation/replan instead of improvising.
+5. **Guard.** Run the cheap per-pass invariant subset from the plan. If any regresses, roll back this
    slice only and halt `INVARIANT_REGRESSION` with the offending invariant id and output.
 
 Never write production code before its failing test exists. Never bulk-write tests for future slices.
@@ -162,8 +194,8 @@ this is a replan signal, not a partial pass.
 2. **Slice**: The Slicer decomposes the milestone into ordered vertical slices and confirms seams.
 3. **Dry-run stop**: If `MODE` is `dry-run`, output the slice plan plus the baseline failing-gate evidence
    and stop without editing production code.
-4. **Implement slice**: For the next slice, run the TDD Cycle (Red → Green → Refactor → Guard) under
-   `REDQUEEN_PROMPT`.
+4. **Implement slice**: For the next slice, run the TDD Cycle (Red → Green → Refactor → Contract Review
+   → Guard) under `REDQUEEN_PROMPT`.
 5. **Advance or halt**: On a stuck slice or invariant regression, roll back only that slice and halt with
    the captured output. Otherwise continue to the next slice.
 6. **Gate check**: When all slices are done (or a gate becomes satisfiable early), the Gate Verifier runs
@@ -194,6 +226,12 @@ gate — surface it as a defect against the plan.
 - **Commit before handoff.** When the milestone is complete, commit the related code with a descriptive
   message before handing state to `CODE_REVIEW_TRIBUNAL.md`. Keep the commit scoped to the milestone's
   changes and do not bundle unrelated work.
+- **Escalate before reasoning rewrite.** Reasoning-tier production-code edits require a recorded
+  exception and a before/after note explaining why feedback plus cheaper repair was insufficient.
+- **Measure the economics.** Record cheap implementation attempts, contract-review cadence/tier,
+  standard-review rejections, reasoning-review escalations, reasoning code-writing exceptions, and
+  token/cost/latency numbers when the runtime exposes them. Missing usage telemetry is a risk note, not
+  a reason to invent numbers.
 - **Per-slice rollback.** A failed slice rolls back only that slice's changes; previously green slices
   remain. A failed milestone rolls back to `rollback_unit`.
 - **Attempt cap.** Each slice gets `MAX_ATTEMPTS` green attempts; the milestone gets `MAX_SLICES` slices.
@@ -205,7 +243,8 @@ gate — surface it as a defect against the plan.
 
 | Missing capability | Adaptation |
 | --- | --- |
-| No subagents | Run Slicer, Implementer, and Gate Verifier as labeled inline passes; keep gate output raw and sequential. |
+| No subagents | Run Slicer, Implementer, Contract Reviewer, and Gate Verifier as labeled inline passes; keep gate output raw and sequential. |
+| No model routing | Use labeled roles with the current model. Preserve the rule that Contract Reviewer feedback happens before any reasoning-tier code-writing exception. |
 | No `REDQUEEN_PROMPT` | Proceed with a plain implementer system prompt; record that robustness evolution was skipped as a risk. |
 | Weak shell access | Run `dry-run`: emit the slice plan and the exact gate commands with expected results for a human to run; mark gates unverified. |
 | No version control | Snapshot `rollback_unit` files before each slice; express rollback as restoring those copies. |
@@ -222,6 +261,10 @@ In `converge` mode, output:
 
 - verdict: `COMPLETE` | `INCOMPLETE` | `SLICE_STUCK` | `INVARIANT_REGRESSION` | `STALE` | `VACUOUS_GATE` | `BLOCKED_DEPENDENCY`;
 - slices implemented, with each slice's red evidence and green evidence;
+- contract review result for each slice: `PASS` or feedback applied/escalated;
+- economics ledger: implementation tier, contract-review cadence/tier, review rejection count,
+  reasoning escalations, reasoning code-writing exceptions, and observed token/cost/latency telemetry
+  when available;
 - `acceptance_gates` results — baseline output → post-implementation output, verbatim;
 - at-risk invariants checked and their results;
 - files changed (confirmed within `implementation_scope`);

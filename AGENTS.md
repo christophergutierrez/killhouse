@@ -75,6 +75,11 @@ pipeline is plain markdown and works in any agent that can read files and run sh
 - **Budget caps.** Every loop is individually capped, and Autopilot has an aggregate budget guard
   (`max_milestones_unattended`, `max_pipeline_reentries`, optional `token_budget`). On a trip, degrade
   to Checkpoint mode and ask — never silently keep spending, never silently halt the work.
+- **Implementation economics.** Reasoning-tier agents write file contracts, architecture decisions, and
+  escalation feedback by default. Cheaper capable tiers do first-pass production coding, and
+  standard-tier agents handle routine contract review. Use reasoning-tier review or code only for an
+  explicit ambiguity, rescue, security/safety patch, cross-cutting refactor, or no-routing fallback, and
+  record why the cheaper path was insufficient.
 - **Mandatory gates always stop**, in either autonomy mode: PLAN blast-radius `BLOCKED`,
   IMPLEMENT_MILESTONE `STALE`/`VACUOUS_GATE`/`BLOCKED_DEPENDENCY`, an un-auto-fixable tribunal finding,
   or an architecture safety gate.

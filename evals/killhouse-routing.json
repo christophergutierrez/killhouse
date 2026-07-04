@@ -123,6 +123,58 @@
       ]
     },
     {
+      "id": "reasoning-contracts-cheap-models-code",
+      "group": "dev",
+      "description": "Reasoning-tier agents write contracts and review feedback by default while cheaper tiers do first-pass code.",
+      "checks": [
+        {
+          "type": "contains",
+          "path": "AGENTS.md",
+          "text": "standard-tier agents handle routine contract review"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
+          "text": "### 3.3 Implementation Authority"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
+          "text": "implementation_contracts"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
+          "text": "contract_depth"
+        },
+        {
+          "type": "contains",
+          "path": "loops/PLAN.md",
+          "text": "Routine contract checks default to `standard` tier"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "Contract Reviewer"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "Private helpers inside an already-contracted file"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "economics ledger"
+        },
+        {
+          "type": "contains",
+          "path": "loops/IMPLEMENT_MILESTONE.md",
+          "text": "Escalate before reasoning rewrite"
+        }
+      ]
+    },
+    {
       "id": "to-prd-does-not-mutate-tracker",
       "group": "held_out",
       "description": "PRD synthesis records gaps instead of interviewing or publishing to a tracker.",

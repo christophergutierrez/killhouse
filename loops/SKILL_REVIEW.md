@@ -89,9 +89,16 @@ the boundary is the instruction contract and artifact handoff, not only a callab
    for `fast`, `standard`, and `reasoning`; agents must echo the resolved map and must not substitute
    nearby versions, families, providers, or "equivalent" models. Invalid config stops before the
    pipeline instead of silently falling back.
-14. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
+14. **Implementation authority**: Reasoning-tier agents write contracts, synthesis, and review feedback
+   by default; standard-tier agents perform routine contract review; cheaper tiers perform first-pass
+   production-code edits. Any reasoning-tier production edit needs an explicit rescue, safety,
+   cross-cutting-refactor, or no-routing exception.
+15. **Contract economy**: Contract depth and review cadence scale with risk. Routine contract review does
+   not require reasoning tier on every slice. Private helpers inside an already-contracted responsibility
+   do not force replan; new public/exported surfaces or scope expansion do.
+16. **Gate strength**: Mandatory stops, non-vacuous baseline checks, staleness checks, rollback rules,
    blast-radius decisions, and human-confirmation points remain enforceable.
-15. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
+17. **Eval readiness**: A deterministic, read-only scenario could verify the routing or output contract
    without relying on subjective prose judgment.
 
 ## Evaluation Model
@@ -166,10 +173,13 @@ Safety is a gate, not a score. Any critical safety failure disqualifies the chan
   unvalidated manifest field, unsupported but non-critical command, missing eval scenario for a changed
   routing contract, unnecessary context load in the main session, a large skill with separable branches
   that should be split into focused skills, missing capability tier for a role where tier matters,
-  expensive/reasoning-tier delegation for mechanical work without justification, missing model-routing
-  fallback, inline work chosen without a brief justification where delegation would preserve context,
-  execution-policy wording that implies different quality gates for cost/time modes, loose model-tier
-  mapping that permits aliases or unreported substitutions,
+  expensive/reasoning-tier delegation for mechanical work without justification, reasoning-tier
+  contract review required on every slice without a risk trigger, reasoning-tier production-code writing
+  as the default path instead of contract/review feedback, over-rigid contracts that force replan for
+  private helpers inside an already-contracted responsibility, missing model-routing fallback, inline
+  work chosen without a brief justification where delegation would preserve context, execution-policy
+  wording that implies different quality gates for cost/time modes, loose model-tier mapping that
+  permits aliases or unreported substitutions,
   or wording likely to make agents over- or under-apply a stage.
 - **Minor**: Non-blocking clarity, naming consistency, discoverability, or formatting issue that does not
   change execution semantics.
@@ -341,9 +351,11 @@ Run what is available and record unavailable tools as risks, not silent skips.
 
 - Use abstract capability tiers for delegated work:
   - `fast`: bounded search, inventory, formatting checks, static validation, and other mechanical work.
-  - `standard`: repository analysis, implementation, ordinary review, and routine synthesis.
-  - `reasoning`: safety decisions, architecture tradeoffs, conflict triage, final verdicts, and mandatory
-    gate judgment.
+  - `standard`: repository analysis, first-pass implementation, routine contract review, ordinary review,
+    and routine synthesis.
+  - `reasoning`: implementation contracts, ambiguous/high-risk review, safety decisions, architecture
+    tradeoffs, conflict triage, final verdicts, and mandatory gate judgment. It reviews diffs only when
+    risk or ambiguity justifies it and gives feedback by default rather than writing production code.
 - Roles that spawn or imply subagents declare `Tier`, `Why`, and `Fallback` when tier materially affects
   cost, safety, or quality.
 - Do not require provider-specific model names unless a runtime integration actually supports and needs
@@ -354,6 +366,13 @@ Run what is available and record unavailable tools as risks, not silent skips.
   until the user fixes or removes it.
 - Flag reasoning-tier agents assigned to mechanical validation or file inventory as Material unless the
   risk profile justifies the cost.
+- Flag reasoning-tier agents assigned to routine first-pass production coding as Material unless there
+  is an explicit rescue, safety, cross-cutting-refactor, or no-routing exception.
+- Flag per-slice reasoning-tier contract review as Material unless slices are high-risk, ambiguous,
+  safety/security/public-contract sensitive, repeatedly rejected, or cross-cutting.
+- Flag contract schemas that require the same detail for trivial adapters and hard algorithms. Hard
+  algorithms need examples, invariants, edge cases, counterexamples, or pseudocode; trivial wiring does
+  not.
 - Flag fast/low-capability agents assigned to safety gates, synthesis, final approval, or architecture
   decisions as Blocking when that assignment could produce an unsafe pass.
 - If model routing is unavailable, the current model may run every role, but the verdict records the

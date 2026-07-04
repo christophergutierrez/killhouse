@@ -126,6 +126,41 @@ do not silently fall back. Record the resolved map in the plan, and require the 
 before using model routing. If the runtime cannot route models, keep the tier labels as intent and
 record `model_routing: unavailable`.
 
+### 3.3 Implementation Authority
+
+Reasoning-tier agents write implementation contracts by default, not production code. Use them for
+architecture, decomposition, file contracts, risk decisions, review feedback, and escalation
+judgment. Assign first-pass production code to the cheapest capable `fast` or `standard` tier.
+
+For each file the executor may change, the plan must provide a file contract:
+
+- path and responsibility;
+- contract_depth: `thin` | `detailed` | `algorithmic`;
+- public functions/classes, names, signatures, and expected behavior;
+- invariants, error handling, and integration boundaries;
+- tests or gates that prove the contract;
+- forbidden edits and out-of-scope behavior.
+
+Depth scales with difficulty. Use `thin` for trivial adapters, wiring, and local formatting changes.
+Use `detailed` when behavior spans multiple collaborators, failure modes, or edge cases. Use
+`algorithmic` when the hard part is internal logic: include pseudocode, examples, invariants,
+complexity expectations, and counterexamples so a cheaper implementer is not guessing the algorithm.
+
+The plan should avoid brittle over-specification. Private helpers inside an already-contracted file's
+responsibility, and test helpers scoped to one slice, may be allowed by the contract and recorded by
+the executor. A new production file, exported/public symbol, persisted or wire behavior, dependency,
+or edit outside `implementation_scope` requires a contract update or replan.
+
+Contract review is cost-aware. Routine contract checks default to `standard` tier. Use reasoning-tier
+contract review only for high-risk slices, ambiguous contract interpretation, security/safety/public
+contract surfaces, repeated rejection, or cross-cutting architecture judgment. Low-risk slices may batch
+standard-tier contract review at milestone end when their gates are independent and reversible.
+
+Reasoning-tier production-code edits are exceptions. Allow them only for security-critical patches,
+cross-cutting refactors where one coherent author matters, repeated failure of the same contract by
+cheaper tiers, or runtimes with no meaningful tier routing. Record the exception and why review-only
+feedback was insufficient.
+
 ---
 
 ## 4. Roles
@@ -157,7 +192,8 @@ record `model_routing: unavailable`.
 - **Lead Planner** *(reasoning, all tiers)*: Triage the task; synthesize evidence and findings;
   dedupe by stable id; triage findings (accept/adapt/reject with reason), resolving conflicts per
   sec 11.1; draft and revise the plan; run falsification; hand the near-final plan to the
-  Adversarial Gate Audit (sec 13); approve the artifact. Does not implement production changes.
+  Adversarial Gate Audit (sec 13); approve the artifact. Writes file contracts, not production
+  changes.
 - **Gate Auditor** *(reasoning; standard+; fresh instance)*: Receives only the plan and repository
   access, none of the planning conversation. Audits every gate and invariant against sec 8 and the
   Evidence Contract. See sec 13.
@@ -463,6 +499,9 @@ End the plan with a section for an execution loop (e.g. PLAN_EXECUTE_LOOP):
 - the consolidated final-state verification sequence;
 - replan triggers (assumed API missing, gate unwritable, dependency conflict, staleness detected);
 - human-confirmation points for high-blast-radius milestones.
+- file contracts for every file the executor may create or modify, including contract depth, allowed
+  private-helper/test-helper flexibility, review cadence, and the reasoning-tier code-writing exception
+  trigger if one is allowed.
 
 This describes what the executor needs; it does not authorize this loop to implement.
 
@@ -511,6 +550,8 @@ Cheap per-pass subset: <ids>. Full suite at: phase-end / final.
 #### Milestone: <stable-slug>
 - outcome (observable, not an activity) / traces_to (standard+) / implementation_scope / dependencies
 - tracer_bullet: yes | no | prerequisite | not_applicable, with rationale
+- implementation_contracts: per-file path, responsibility, contract_depth, public symbols/signatures,
+  behavior, invariants, gates, allowed private/test helpers, forbidden edits, contract_review cadence
 - subagent_work: role, tier, delegate, policy_rationale, escalation_trigger, scope, inputs, required output
 - acceptance_gates: exact commands + expected results + baseline_polarity + post_condition + evidence
 - gate_failure_reasoning / invariants_at_risk / evidence_to_record / rollback_unit / stop_conditions

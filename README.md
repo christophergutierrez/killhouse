@@ -166,6 +166,9 @@ or the full grilling-to-implementation pipeline.
 - **No No-Ops:** Every instruction must explicitly alter agent behavior.
 - **Strict Leading Words:** Use dense, predictable vocabulary—for example, "vertical slice"—to steer agent reasoning traces.
 - **Falsifiable Gates:** A gate that cannot be proven to fail at baseline is documentation, not a gate.
+- **Expensive Reasoning at Boundaries:** Reasoning-tier agents write contracts and handle ambiguous or
+  high-risk review; standard-tier agents do routine contract checks, and cheaper capable tiers do
+  first-pass production coding unless an explicit rescue or safety exception is recorded.
 
 ## Credits
 
