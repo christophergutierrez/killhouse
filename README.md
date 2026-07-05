@@ -6,6 +6,8 @@ Killhouse is an orchestration hub for AI coding agents. It solves "Skill Hell" a
 
 Instead of loading massive prompts into your main agent session—which burns tokens and degrades reasoning—Killhouse separates the *triggers* from the *payloads*. Lightweight skills act as pointers in your main chat, spawning independent, heavy subagents to handle rigorous Software Development Life Cycle (SDLC) loops.
 
+> **Prefer to watch?** [7-minute explainer →](https://youtu.be/8kxfaLByVbE) — a walkthrough of how the pipeline works.
+
 ## Quickstart
 
 Killhouse ships plugin manifests for both Claude Code and Codex:
