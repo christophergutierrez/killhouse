@@ -42,7 +42,7 @@ When a user asks to run the orchestrator as a subagent, resolve what that means 
 3. If nesting is not supported (the common case), the orchestrator runs the review dimensions itself, sequentially or batched into a single pass. The caller still stays lean; the only loss is reviewer parallelism.
 4. If you cannot tell which applies, ask the user whether they want true parallel reviewers or a lean caller with inline reviews, rather than guessing.
 
-In every delegated run the orchestrator returns a lean result to the caller: reviewed artifact path, verdict, rounds used, short changelog, and any open questions. Never return reviewer transcripts or raw round output.
+In every delegated run the orchestrator returns a lean result to the caller: reviewed artifact path, verdict, rounds used, short changelog, and any open questions. Never return reviewer transcripts or raw round output. When the orchestrator spawns reviewer subagents, log each delegation per `loops/DELEGATION_LOG.md`; that is data collection only and never changes tier selection.
 
 ### Review Dimensions
 

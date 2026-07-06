@@ -14,7 +14,7 @@ The core pattern is:
 
 This is intentionally smaller than devtribunal. Use "good enough" subagents: enough independence to catch real issues, not so many reviewers that orchestration becomes the work.
 
-**Context hygiene.** This loop runs as a delegated subagent by default so the caller's session stays lean. Specialist reviewers return only actionable findings; the loop hands back the findings table and the PASS/FAIL verdict — never the reviewers' reasoning traces or raw tool output.
+**Context hygiene.** This loop runs as a delegated subagent by default so the caller's session stays lean. Specialist reviewers return only actionable findings; the loop hands back the findings table and the PASS/FAIL verdict — never the reviewers' reasoning traces or raw tool output. When this loop spawns specialist subagents, log each delegation per `loops/DELEGATION_LOG.md`; that is data collection only and never changes tier selection.
 
 ## Prompt
 

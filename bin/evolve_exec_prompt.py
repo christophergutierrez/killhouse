@@ -118,14 +118,17 @@ def best_champion(champions_path: Path) -> dict[str, Any]:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Evolve/extract the redqueen execution prompt for IMPLEMENT_MILESTONE.")
+    p = argparse.ArgumentParser(
+        description="Evolve/extract the redqueen execution prompt for IMPLEMENT_MILESTONE."
+    )
     p.add_argument("--champions", metavar="PATH",
                    help="extract from an existing champions.json instead of running evolve")
     p.add_argument("--prompt-out", default="redqueen-exec-prompt.md", metavar="PATH",
                    help="where to write the extracted execution prompt (default: ./redqueen-exec-prompt.md)")
     p.add_argument("--domain", default="code_improvement", choices=["code_improvement", "text2sql"],
                    help="redqueen domain to evolve (default: code_improvement — its genome is a fix prompt)")
-    p.add_argument("--out", default="runs/exec", help="redqueen output dir when evolving (default: runs/exec)")
+    p.add_argument("--out", default="runs/exec",
+                   help="redqueen output dir when evolving (default: runs/exec)")
     p.add_argument("--mock", action="store_true", help="offline plumbing check (fitness will be 0.0)")
     p.add_argument("--rounds", type=int, default=8)
     p.add_argument("--iterations", type=int, default=20)
@@ -148,9 +151,9 @@ def main() -> None:
 
     if fitness == 0.0:
         die(3,
-            f"[warn] champion fitness is 0.0 — mock run or no improvement found.\n"
-            f"       Prompt NOT written. IMPLEMENT_MILESTONE will use a plain implementer prompt.\n"
-            f"       Re-run with a real model endpoint to get a meaningful evolved prompt.")
+            "[warn] champion fitness is 0.0 — mock run or no improvement found.\n"
+            "       Prompt NOT written. IMPLEMENT_MILESTONE will use a plain implementer prompt.\n"
+            "       Re-run with a real model endpoint to get a meaningful evolved prompt.")
 
     header = (
         "<!-- Evolved by redqueen (Digital Red Queen). Consumed by loops/IMPLEMENT_MILESTONE "

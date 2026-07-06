@@ -14,3 +14,10 @@ __pycache__/
 
 # Pipeline run state (session-local; not committed)
 .killhouse/run-state.json
+
+# Delegation log (routing-calibration run data; not source)
+.killhouse/delegations.jsonl
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/

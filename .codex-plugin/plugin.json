@@ -1,6 +1,6 @@
 {
   "name": "killhouse",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A rigorous, unforgiving AI pipeline where code is planned, tested, and audited without mercy.",
   "author": {
     "name": "Chris Gutierrez",

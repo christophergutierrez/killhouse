@@ -109,6 +109,9 @@ the runtime, record `model_routing: unavailable`.
   is discarded.
 - Interactive front-end skills (`classify`, `grill-with-docs`, `to-prd`) run in the main chat by
   design but externalize output to files (`CONTEXT.md`, ADRs, PRD).
+- Before each delegation, append a delegation record per `loops/DELEGATION_LOG.md` for
+  routing-calibration data. This is data collection only: it never changes tier selection and never
+  gates or blocks a delegation. The log is a git-ignored artifact, never echoed into this session.
 
 ## Mandatory gates (never skipped, in either mode)
 

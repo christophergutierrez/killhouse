@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://killhouse.dev/schemas/delegation_record.schema.json",
+  "title": "Killhouse delegation record",
+  "description": "One JSONL record per subagent delegation, captured at the delegation boundary. Pre-delegation fields are frozen before the subagent runs; `outcome` is finalized after it returns. The record must carry enough to replay the delegation in isolation (Gate 0: HERMETIC requires pinning repo SHA and the gate's cwd).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "delegation_id",
+    "plan_position",
+    "depends_on",
+    "resolved_prompt",
+    "chosen_tier",
+    "tier_price",
+    "decision_signals",
+    "gate",
+    "upstream_artifacts",
+    "outcome"
+  ],
+  "properties": {
+    "delegation_id": {"type": "string", "minLength": 1},
+    "plan_position": {"type": "string", "minLength": 1},
+    "depends_on": {
+      "type": "array",
+      "description": "delegation_ids this delegation consumed. May be empty, but the field must be present.",
+      "items": {"type": "string"}
+    },
+    "resolved_prompt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Verbatim prompt sent to the subagent, frozen before it runs."
+    },
+    "chosen_tier": {"type": "string", "enum": ["fast", "standard", "reasoning"]},
+    "tier_price": {
+      "type": "object",
+      "description": "Price of the chosen tier, not just its identity. `basis` records whether the input/output numbers are real (configured, from a prices map), a documented stand-in (illustrative), or unknown (unpriced). Never invent numbers: under current-model-only routing where no price exists, use basis 'unpriced' and omit them.",
+      "required": ["currency", "basis"],
+      "properties": {
+        "currency": {"type": "string", "minLength": 1},
+        "basis": {"type": "string", "enum": ["configured", "illustrative", "unpriced"]},
+        "input": {"type": "number"},
+        "output": {"type": "number"}
+      },
+      "if": {"properties": {"basis": {"enum": ["configured", "illustrative"]}}},
+      "then": {"required": ["currency", "basis", "input", "output"]}
+    },
+    "decision_signals": {
+      "type": "object",
+      "description": "The classify/triage output plus the confidence/reasoning that drove the tier, captured BEFORE the subagent runs.",
+      "required": ["source", "task_tier", "confidence", "reasoning"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "task_tier": {"type": "string", "minLength": 1},
+        "confidence": {"type": "number"},
+        "reasoning": {"type": "string", "minLength": 1}
+      }
+    },
+    "gate": {
+      "type": "object",
+      "description": "The exact verification the delegation's output is judged by. cwd is required: Gate 0 proved replay fidelity depends on it.",
+      "required": ["command", "cwd", "pass_criteria", "baseline_polarity"],
+      "properties": {
+        "command": {"type": "string", "minLength": 1},
+        "cwd": {"type": "string", "minLength": 1},
+        "pass_criteria": {"type": "string", "minLength": 1},
+        "baseline_polarity": {"type": "string", "enum": ["pass", "fail"]}
+      }
+    },
+    "upstream_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Resolved inputs consumed, enough to replay. Must include a repository_state pinning the VCS head.",
+      "items": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": {"kind": {"type": "string", "minLength": 1}}
+      },
+      "contains": {
+        "type": "object",
+        "required": ["kind", "pinned"],
+        "properties": {
+          "kind": {"const": "repository_state"},
+          "pinned": {
+            "type": "object",
+            "required": ["head"],
+            "properties": {"head": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "description": "Finalized after the subagent returns. A fired escalation is a ground-truth 'guessed-too-low' label: record its magnitude and trigger, not just the bit.",
+      "required": ["status", "escalated"],
+      "properties": {
+        "status": {"type": "string", "enum": ["pass", "fail"]},
+        "escalated": {"type": "boolean"},
+        "escalation_magnitude": {
+          "type": "integer",
+          "description": "Tiers jumped when escalation fired. Required when escalated is true."
+        },
+        "escalation_trigger": {
+          "type": "string",
+          "description": "The signal that triggered escalation. Required when escalated is true."
+        }
+      },
+      "if": {"properties": {"escalated": {"const": true}}},
+      "then": {"required": ["status", "escalated", "escalation_magnitude", "escalation_trigger"]}
+    }
+  }
+}

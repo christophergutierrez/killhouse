@@ -48,7 +48,8 @@ Run until all Blocking findings are fixed, only accepted risks remain, or `MAX_P
 - Prefer dual notation when needed: Claude Code slash commands as primary where they already exist, plus
   runtime-neutral skill names for Codex and generic agents.
 - Do not flatten rigorous loop payloads into the caller context. Heavy loop instructions remain delegated
-  artifacts; reviews return findings and verdicts only.
+  artifacts; reviews return findings and verdicts only. When this loop spawns reviewer subagents, log each
+  delegation per `loops/DELEGATION_LOG.md`; that is data collection only and never changes tier selection.
 - Do not edit `lib/redqueen` as part of skill review unless the user explicitly scopes redqueen changes.
 
 ## Skill Quality Rubric

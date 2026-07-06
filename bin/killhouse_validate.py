@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import killhouse_delegation_log as dl
 
 ROOT = Path(__file__).resolve().parents[1]
 SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?$")
@@ -22,7 +23,7 @@ def read(path: str) -> str:
     return (ROOT / path).read_text()
 
 
-def require(condition: bool, message: str) -> None:
+def require(condition: object, message: str) -> None:
     if not condition:
         raise CheckFailure(message)
 
@@ -58,6 +59,7 @@ def check_manifests() -> None:
     marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
     plugin = next((item for item in marketplace["plugins"] if item.get("name") == "killhouse"), None)
     require(plugin is not None, "marketplace manifest has no killhouse plugin entry")
+    assert plugin is not None  # narrowing for type-checkers; require() already enforced it
 
     versions = {
         "plugin.json": claude.get("version"),
@@ -66,14 +68,20 @@ def check_manifests() -> None:
     }
     require(len(set(versions.values())) == 1, f"plugin manifest versions differ: {versions}")
     version = next(iter(versions.values()))
-    require(isinstance(version, str) and SEMVER.match(version) is not None, f"invalid plugin version: {version}")
+    require(
+        isinstance(version, str) and SEMVER.match(version) is not None,
+        f"invalid plugin version: {version}",
+    )
 
 
 def check_model_config() -> None:
     check_json(".killhouse/config.example.json")
 
     config = json.loads((ROOT / ".killhouse/config.example.json").read_text())
-    require(config.get("execution_policy") in {"cost_optimized", "time_optimized"}, "invalid execution_policy")
+    require(
+        config.get("execution_policy") in {"cost_optimized", "time_optimized"},
+        "invalid execution_policy",
+    )
 
     tiers = config.get("model_tiers")
     require(isinstance(tiers, dict), "model_tiers must be an object")
@@ -166,7 +174,10 @@ def check_docs_sync() -> None:
     contains("loops/PLAN.md", "Routine contract checks default to `standard` tier")
     contains("loops/IMPLEMENT_MILESTONE.md", "Contract Reviewer")
     contains("loops/IMPLEMENT_MILESTONE.md", "Reasoning code-writing exception")
-    contains("loops/IMPLEMENT_MILESTONE.md", "Private helpers are allowed inside an already-contracted file's responsibility")
+    contains(
+        "loops/IMPLEMENT_MILESTONE.md",
+        "Private helpers are allowed inside an already-contracted file's responsibility",
+    )
     contains("loops/IMPLEMENT_MILESTONE.md", "No `implementation_contracts`")
     contains("loops/IMPLEMENT_MILESTONE.md", "promote `none_trivial` or `batch_standard`")
     contains("loops/IMPLEMENT_MILESTONE.md", "economics ledger")
@@ -180,10 +191,39 @@ def check_docs_sync() -> None:
     not_contains("skills/to-prd/SKILL.md", "Apply the `ready-for-agent` triage label")
 
 
+def check_delegation_logging() -> None:
+    # The schema is the single source of truth; it must load and the canonical sample must satisfy it.
+    schema = dl.load_schema()
+    sample = json.loads((ROOT / "schemas/delegation_record.sample.json").read_text())
+    errors = dl.validate_record(sample, schema)
+    require(not errors, f"sample delegation record fails schema: {errors}")
+
+    contains("loops/DELEGATION_LOG.md", "Delegation Logging Protocol")
+    contains("loops/DELEGATION_LOG.md", "Freeze before, finalize after")
+    contains("loops/DELEGATION_LOG.md", "It does not change classify/triage/plan tiering")
+    contains("loops/DELEGATION_LOG.md", "include a `repository_state` pinning the VCS `head`")
+    contains("loops/DELEGATION_LOG.md", "record `cwd`, not only `command`")
+
+    # Every place a delegation happens must reference the protocol.
+    for path in (
+        "skills/ask-kh/SKILL.md",
+        "loops/PLAN.md",
+        "loops/IMPLEMENT_MILESTONE.md",
+        "loops/REVIEW_DOCUMENT.md",
+        "loops/CODE_REVIEW_TRIBUNAL.md",
+        "loops/ARCHITECTURE_DESIGN.md",
+        "loops/SKILL_REVIEW.md",
+    ):
+        contains(path, "loops/DELEGATION_LOG.md")
+
+
 def check_redqueen() -> None:
     contains("AGENTS.md", "optional and self-degrading")
     contains("skills/ask-kh/SKILL.md", "degrades to a plain implementer prompt")
-    contains("bin/evolve_exec_prompt.py", "Exit codes: 0 ok; 2 redqueen run/extract failed; 3 no usable champion or fitness==0.0")
+    contains(
+        "bin/evolve_exec_prompt.py",
+        "Exit codes: 0 ok; 2 redqueen run/extract failed; 3 no usable champion or fitness==0.0",
+    )
     contains("bin/evolve_exec_prompt.py", "--mock always exits 0")
 
 
@@ -196,6 +236,7 @@ CHECKS = {
     "install": check_install,
     "mandatory-gates": check_mandatory_gates,
     "docs-sync": check_docs_sync,
+    "delegation-logging": check_delegation_logging,
     "redqueen": check_redqueen,
 }
 

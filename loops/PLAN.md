@@ -12,6 +12,8 @@ it scales down rather than applying full machinery to everything.
 **Context hygiene.** This loop runs as a delegated subagent by default so the caller's session stays
 lean. Reviewers return findings only; the loop hands back the plan file at `OUTPUT_PATH` plus its
 machine-readable verdict block — never its discovery notes, reviewer transcripts, or reasoning trace.
+When this loop spawns role subagents, log each delegation per `loops/DELEGATION_LOG.md`; that is data
+collection only and never changes tier selection.
 
 ## Inputs
 

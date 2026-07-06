@@ -19,6 +19,12 @@ jobs:
       - name: Validate manifests and contracts
         run: python3 bin/killhouse_validate.py --check-whitespace
 
+      - name: Lint (ruff)
+        run: pipx run ruff check bin tests
+
+      - name: Type-check (mypy)
+        run: pipx run mypy bin tests
+
       - name: Run unit tests
         run: python3 -m unittest discover tests
 

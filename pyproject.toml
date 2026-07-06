@@ -1,0 +1,22 @@
+# Tooling config for Killhouse's Python surface (bin/ and tests/).
+# The repo ships no installable package; these tables only configure ruff and mypy.
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["lib"]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "UP"]
+# E402: several bin/ scripts and tests deliberately insert sys.path before importing a
+# sibling bin module; the imports cannot precede that line.
+ignore = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["bin", "tests"]
+exclude = "^lib/"
+ignore_missing_imports = true
+check_untyped_defs = true
+# Legacy scripts predate typing; do not fail the build on their missing annotations.
+disallow_untyped_defs = false

@@ -79,6 +79,9 @@ condition or safety gate fires, or `MAX_SLICES` / `MAX_ATTEMPTS` is reached.
   lean. It is the noisiest stage — per-slice failing/passing test output, multiplied by slices and
   milestones — and none of that belongs in the caller. Return only the verdict block plus
   artifact/evidence pointers; keep raw test logs and the loop's reasoning trace inside the loop.
+  When this loop spawns role subagents (Implementer, Contract Reviewer, Gate Verifier), log each
+  delegation per `loops/DELEGATION_LOG.md`. A fired contract-review or gate escalation is recorded as
+  the delegation's ground-truth `escalation_magnitude`; logging never changes tier selection.
 - **Execution policy controls tier, not quality.** Gates, invariants, and review standards are identical
   under `cost_optimized` and `time_optimized`. Under `cost_optimized`, use the cheapest capable tier for
   bounded, reversible implementation slices and escalate on evidence. Under `time_optimized`, use a

@@ -87,6 +87,12 @@ pipeline is plain markdown and works in any agent that can read files and run sh
 - **Mandatory gates always stop**, in either autonomy mode: PLAN blast-radius `BLOCKED`,
   IMPLEMENT_MILESTONE `STALE`/`VACUOUS_GATE`/`BLOCKED_DEPENDENCY`, an un-auto-fixable tribunal finding,
   or an architecture safety gate.
+- **Delegation logging.** Before each subagent delegation, append one routing-calibration record per
+  `loops/DELEGATION_LOG.md` (schema: `schemas/delegation_record.schema.json`). This is data collection
+  only — it never changes tier selection and never blocks a delegation. The offline gate-replay harness
+  (`bin/killhouse_gate_replay.py`) re-runs a logged delegation on a lower tier against its **real** gate;
+  it never substitutes a model's judgment for running the gate, and records `SKIPPED_NO_ROUTING` rather
+  than faking a cheaper-tier run when no model tier map is configured.
 
 ## Working with the `lib/redqueen` submodule
 

@@ -20,7 +20,7 @@ Run until the highest-priority architectural friction is resolved, no Critical/H
 - Treat `DOMAIN_DOCS` as the primary reference for vocabulary and decisions, but flag contradictions when docs appear stale or inconsistent with working code.
 - Do not introduce abstractions, renames, type wrappers, or folder moves unless they reduce caller knowledge, improve locality, clarify a real boundary, or align domain behavior.
 - Prefer narrow, behavior-preserving refactors. Escalate broad contract changes before editing.
-- **Context hygiene.** This loop runs as a delegated subagent by default so the caller's session stays lean. Reviewers read only scoped modules and return findings only; the loop hands back the RFC (review-only) or the converge summary (verdict, resolved findings, tests run) — never its full review transcript or reasoning trace.
+- **Context hygiene.** This loop runs as a delegated subagent by default so the caller's session stays lean. Reviewers read only scoped modules and return findings only; the loop hands back the RFC (review-only) or the converge summary (verdict, resolved findings, tests run) — never its full review transcript or reasoning trace. When this loop spawns reviewer subagents, log each delegation per `loops/DELEGATION_LOG.md`; that is data collection only and never changes tier selection.
 
 ### Safety Baseline
 
