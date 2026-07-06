@@ -172,3 +172,11 @@ no endpoint is configured, or the champion's fitness is `0.0`, the adapter says 
 `IMPLEMENT_MILESTONE` proceeds with a plain implementer prompt. A real evolution is expensive
 (many LLM calls); the intended pattern is to evolve occasionally and reuse the champion via
 `--champions`.
+
+**Config precedence — killhouse drives redqueen, not the other way around.** redqueen is a standalone
+project with its own env-based config; when *killhouse* invokes it, killhouse's config wins. If
+`.killhouse/config.*` declares a `base_url` (with `api_key_env` naming the token's env var and
+`redqueen_tier` picking the model), `bin/evolve_exec_prompt.py` injects that OpenAI-compatible routing
+into the redqueen subprocess, **overriding the ambient environment** — so you can point redqueen at an
+external provider like fireworks.ai without editing the submodule. With no `base_url`, redqueen keeps its
+own env/config. `--print-routing` shows what will be injected.

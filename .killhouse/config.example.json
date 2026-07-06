@@ -1,6 +1,10 @@
 {
   "_comment": "Model ids are exact opaque strings — use the id your proxy or runtime expects. To discover available ids: check your proxy's /v1/models endpoint, the admin UI, or run `claude models` in Claude Code.",
+  "_comment_provider": "base_url / api_key_env / redqueen_tier are OPTIONAL. They let killhouse drive an OpenAI-compatible external provider (e.g. fireworks.ai) when killhouse invokes redqueen. api_key_env NAMES the env var holding the token — the secret itself stays in the environment, never in this file. Omit these three for current-model-only routing.",
   "execution_policy": "cost_optimized",
+  "base_url": "https://api.fireworks.ai/inference/v1",
+  "api_key_env": "FIREWORKS_API_KEY",
+  "redqueen_tier": "standard",
   "model_tiers": {
     "fast": "proxy/exact-fast-model-id",
     "standard": "proxy/exact-standard-model-id",

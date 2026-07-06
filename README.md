@@ -91,9 +91,13 @@ bin/evolve_exec_prompt.py --mock --rounds 2 --iterations 3 --init-random 2 --bat
 ```
 
 For a *meaningful* evolved prompt, point it at a local model (`OPENAI_BASE_URL` + `DRQ_MODEL`) and run
-without `--mock`. To remove Killhouse later, use the uninstall command for your runtime, such as
-`claude plugin uninstall killhouse` in Claude Code or the corresponding `codex plugin` removal command
-in Codex.
+without `--mock`. Alternatively, let killhouse drive an OpenAI-compatible provider (e.g. fireworks.ai):
+add `base_url`, `api_key_env` (the *name* of the env var holding the token — the secret stays in the
+environment), and `redqueen_tier` to `.killhouse/config.*`. When killhouse invokes redqueen, that config
+is authoritative and overrides the ambient environment; `bin/evolve_exec_prompt.py --print-routing` shows
+the resolved routing. Standalone redqueen runs are unaffected. To remove Killhouse later, use the
+uninstall command for your runtime, such as `claude plugin uninstall killhouse` in Claude Code or the
+corresponding `codex plugin` removal command in Codex.
 
 ## The Architecture
 

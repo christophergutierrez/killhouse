@@ -89,6 +89,15 @@ def check_model_config() -> None:
         value = tiers.get(tier)
         require(isinstance(value, str) and value.strip(), f"model_tiers.{tier} must be a non-empty string")
 
+    # Optional external-provider routing (used when killhouse invokes redqueen).
+    for field in ("base_url", "api_key_env"):
+        if field in config:
+            require(isinstance(config[field], str) and config[field].strip(),
+                    f"{field} must be a non-empty string when present")
+    if "redqueen_tier" in config:
+        require(config["redqueen_tier"] in {"fast", "standard", "reasoning"},
+                "redqueen_tier must be one of fast | standard | reasoning")
+
 
 def check_runtime_contracts() -> None:
     contains("AGENTS.md", "/ask-kh")
