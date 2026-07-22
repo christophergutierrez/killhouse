@@ -9,15 +9,22 @@ redqueen-exec-prompt.md
 __pycache__/
 *.pyc
 
-# Local Killhouse runtime overrides
+# Local Killhouse runtime artifacts and overrides
+.killhouse/*
+!.killhouse/config.example.json
+# Explicit line kept for the self-hosting validator (bin/killhouse_validate.py --check docs-sync);
+# redundant with .killhouse/* above but documents the contract.
 .killhouse/config.local.json
 
-# Pipeline run state (session-local; not committed)
-.killhouse/run-state.json
-
-# Delegation log (routing-calibration run data; not source)
-.killhouse/delegations.jsonl
+# Local agent/runtime artifacts
+.flocode/
 
 # Tooling caches
 .mypy_cache/
 .ruff_cache/
+.pytest_cache/
+
+# Local Python environments and coverage
+.venv/
+.coverage
+htmlcov/

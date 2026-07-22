@@ -14,11 +14,49 @@ Create the `docs/adr/` directory lazily — only when the first ADR is needed.
 
 That's it. An ADR can be a single paragraph. The value is in recording *that* a decision was made and *why* — not in filling out sections.
 
+## Optional frontmatter
+
+An ADR may begin with a `---`-delimited frontmatter block using simple `key: value` lines. This is
+optional and soft: a single-paragraph ADR with no frontmatter remains valid. v1 supports simple
+`key: value` lines only (no nested YAML, no lists, no quoting).
+
+```md
+---
+status: accepted
+implementation: shipped
+load_bearing: true
+supersedes: ADR-0003
+superseded_by: ADR-0007
+---
+
+# {Short title of the decision}
+
+{1-3 sentences: what's the context, what did we decide, and why.}
+```
+
+Fields and their default semantics when absent:
+
+- **status** (default `accepted`) — `proposed | accepted | deprecated | superseded`. Missing status
+  means the ADR is treated as accepted.
+- **implementation** (default `unknown`) — `conceptual | planned | partial | shipped | unknown`.
+  Controls how the `VALIDATE` loop routes absent code evidence:
+  - `conceptual` — no code evidence is expected; the ADR is a pure design decision.
+  - `planned` — absence is an Expected gap, not drift.
+  - `partial` — weak or missing evidence routes to Needs input.
+  - `shipped` — evidence is expected; absence or contradiction can be blocking when `load_bearing` is true.
+  - `unknown` (the default) — absent evidence routes to Needs input, not Drift.
+- **load_bearing** (default `unknown`, treated as false for blocking) — `true | false | unknown`.
+  Only `shipped` + `load_bearing: true` can make a contradiction or absence blocking in `VALIDATE`.
+- **supersedes** — the ADR id this decision replaces (e.g. `ADR-0003`).
+- **superseded_by** — the ADR id that replaces this one.
+
+Blocking semantics apply only as input to the `VALIDATE` loop, not as normal ADR authoring overhead.
+An ADR without frontmatter is always valid; the defaults exist so old terse ADRs never fail.
+
 ## Optional sections
 
 Only include these when they add genuine value. Most ADRs won't need them.
 
-- **Status** frontmatter (`proposed | accepted | deprecated | superseded by ADR-NNNN`) — useful when decisions are revisited
 - **Considered Options** — only when the rejected alternatives are worth remembering
 - **Consequences** — only when non-obvious downstream effects need to be called out
 

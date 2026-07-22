@@ -125,6 +125,7 @@ def check_delegation() -> None:
         "loops/CODE_REVIEW_TRIBUNAL.md",
         "loops/ARCHITECTURE_DESIGN.md",
         "loops/SKILL_REVIEW.md",
+        "loops/VALIDATE.md",
     ]
     for path in heavy_loops:
         text = read(path)
@@ -175,6 +176,8 @@ def check_docs_sync() -> None:
     contains("skills/ask-kh/SKILL.md", "If a config exists but is invalid")
     contains("skills/ask-kh/SKILL.md", "Reasoning-tier agents write file contracts")
     contains("skills/ask-kh/SKILL.md", "minimal milestone does not need `implementation_contracts`")
+    contains("skills/ask-kh/references/autonomy.md", "Branching mode")
+    contains("skills/ask-kh/references/autonomy.md", "Autopilot may create and move through planned branches")
     contains("loops/PLAN.md", "MODEL_TIER_MAP")
     contains("loops/PLAN.md", "Implementation Authority")
     contains("loops/PLAN.md", "implementation_contracts")
@@ -207,11 +210,45 @@ def check_delegation_logging() -> None:
     errors = dl.validate_record(sample, schema)
     require(not errors, f"sample delegation record fails schema: {errors}")
 
+    missing_dirty = json.loads(json.dumps(sample))
+    repo_state = next(
+        item for item in missing_dirty["upstream_artifacts"] if item.get("kind") == "repository_state"
+    )
+    del repo_state["pinned"]["dirty_files"]
+    require(
+        dl.validate_record(missing_dirty, schema),
+        "delegation schema must reject repository_state without dirty_files",
+    )
+
+    malformed_dirty = json.loads(json.dumps(sample))
+    repo_state = next(
+        item for item in malformed_dirty["upstream_artifacts"] if item.get("kind") == "repository_state"
+    )
+    repo_state["pinned"]["dirty_files"] = [{"path": "changed.py", "status": "modified"}]
+    require(
+        dl.validate_record(malformed_dirty, schema),
+        "delegation schema must reject dirty files without pinned content or content_artifact",
+    )
+
+    mismatched_router = json.loads(json.dumps(sample))
+    mismatched_router["router_decision"]["selected_tier"] = "reasoning"
+    require(
+        dl.validate_record(mismatched_router, schema),
+        "delegation schema must reject applied router decisions that differ from chosen_tier",
+    )
+
     contains("loops/DELEGATION_LOG.md", "Delegation Logging Protocol")
     contains("loops/DELEGATION_LOG.md", "Freeze before, finalize after")
     contains("loops/DELEGATION_LOG.md", "It does not change classify/triage/plan tiering")
     contains("loops/DELEGATION_LOG.md", "include a `repository_state` pinning the VCS `head`")
     contains("loops/DELEGATION_LOG.md", "record `cwd`, not only `command`")
+    contains("loops/DELEGATION_LOG.md", "routing_request")
+    contains("loops/DELEGATION_LOG.md", "router_decision")
+    contains("loops/DELEGATION_LOG.md", "minimum_viable_tier")
+    contains("loops/DELEGATION_LOG.md", "If the planner later chooses natural branch or PR breakpoints")
+    contains("loops/DELEGATION_LOG.md", "`chosen_tier` records the actual executed tier")
+    contains("schemas/delegation_record.schema.json", "routing_request")
+    contains("schemas/delegation_record.schema.json", "router_decision")
 
     # Every place a delegation happens must reference the protocol.
     for path in (
@@ -222,8 +259,31 @@ def check_delegation_logging() -> None:
         "loops/CODE_REVIEW_TRIBUNAL.md",
         "loops/ARCHITECTURE_DESIGN.md",
         "loops/SKILL_REVIEW.md",
+        "loops/VALIDATE.md",
     ):
         contains(path, "loops/DELEGATION_LOG.md")
+
+
+def check_adr_convention() -> None:
+    # The ADR frontmatter convention (added for the VALIDATE loop) must document the
+    # optional fields and their default semantics so old terse ADRs never fail.
+    contains("skills/domain-modeling/ADR-FORMAT.md", "implementation:")
+    contains("skills/domain-modeling/ADR-FORMAT.md", "load_bearing:")
+    contains("skills/domain-modeling/ADR-FORMAT.md", "supersedes")
+    contains("skills/domain-modeling/ADR-FORMAT.md", "superseded_by")
+    contains("skills/domain-modeling/ADR-FORMAT.md", "default `accepted`")
+    contains("skills/domain-modeling/ADR-FORMAT.md", "default `unknown`")
+    contains("skills/domain-modeling/ADR-FORMAT.md", "old terse ADRs never fail")
+
+
+def check_validate_loop() -> None:
+    # VALIDATE is a heavy, delegated, standalone maintenance loop. It must document
+    # its off-pipeline nature, reference the delegation log, and document direct-invoke.
+    require((ROOT / "loops/VALIDATE.md").is_file(), "loops/VALIDATE.md does not exist")
+    contains("loops/VALIDATE.md", "standalone")
+    contains("loops/VALIDATE.md", "not part of the per-change pipeline")
+    contains("loops/VALIDATE.md", "loops/DELEGATION_LOG.md")
+    contains("loops/VALIDATE.md", "Direct Invocation")
 
 
 def check_redqueen() -> None:
@@ -246,6 +306,8 @@ CHECKS = {
     "mandatory-gates": check_mandatory_gates,
     "docs-sync": check_docs_sync,
     "delegation-logging": check_delegation_logging,
+    "adr-convention": check_adr_convention,
+    "validate-loop": check_validate_loop,
     "redqueen": check_redqueen,
 }
 
