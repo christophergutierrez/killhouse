@@ -18,6 +18,9 @@ Killhouse ships plugin manifests for both Claude Code and Codex:
 The pipeline itself is plain Markdown. If a runtime can read files, run shell commands, and follow
 `SKILL.md` instructions, it can run Killhouse even without first-class plugin support.
 
+The helper scripts in `bin/` (validator, delegation logging, gate replay, redqueen driver) require
+**Python 3.11+** on `PATH` as `python3`. They are stdlib-only — no packages to install.
+
 ### Claude Code
 
 Requires [Claude Code](https://docs.claude.com/en/docs/claude-code) v2.1+.

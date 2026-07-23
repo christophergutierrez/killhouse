@@ -1,5 +1,8 @@
 # Tooling config for Killhouse's Python surface (bin/ and tests/).
 # The repo ships no installable package; these tables only configure ruff and mypy.
+# There is deliberately no [project] table (its required `version` would drift from
+# plugin.json, which bin/bump_plugin_version.py owns). The supported Python floor is
+# 3.11, declared here via the ruff/mypy pins and documented in the README Quickstart.
 
 [tool.ruff]
 line-length = 110
