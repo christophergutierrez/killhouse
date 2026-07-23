@@ -93,6 +93,11 @@ pipeline is plain markdown and works in any agent that can read files and run sh
   (`bin/killhouse_gate_replay.py`) re-runs a logged delegation on a lower tier against its **real** gate;
   it never substitutes a model's judgment for running the gate, and records `SKIPPED_NO_ROUTING` rather
   than faking a cheaper-tier run when no model tier map is configured.
+- **Mechanical plan execution.** When a complete delegation plan is ready, the conductor
+  (`bin/killhouse_conduct.py` + `loops/CONDUCT.md`) is a zero-intelligence driver that walks the
+  delegation DAG in topological order, runs each delegation through its planned tier and real gate,
+  escalates on failure, and writes records mechanically—used for headless replay or extension without
+  human orchestration.
 
 ## Working with the `lib/redqueen` submodule
 

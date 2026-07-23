@@ -169,6 +169,21 @@ The agent will parse `skills/ask-kh/SKILL.md` for minimal context cost, classify
 `/classify` in Claude Code or the `classify` skill in Codex, and then route either to the trivial fast path
 or the full grilling-to-implementation pipeline.
 
+## Headless Plan Execution
+
+When a delegation plan is ready (produced by `loops/PLAN.md` or another stage), the conductor
+(`bin/killhouse_conduct.py`) is a zero-intelligence driver for headless replay or extension. It walks
+the delegation DAG in topological order, runs each delegation on its planned tier, executes the real
+gate, escalates on failure, and writes records mechanically. Requires a `model_tiers` map and an
+executor template (`--executor`, `KILLHOUSE_CONDUCT_EXECUTOR`, or `conduct_executor` in the config):
+
+```bash
+python3 bin/killhouse_conduct.py --validate plan.json    # validate without running
+python3 bin/killhouse_conduct.py --run plan.json         # execute end-to-end; exit 2 if unroutable
+```
+
+See `loops/CONDUCT.md` for full semantics, schema reference, and escalation rules.
+
 ## Operating Principles
 
 - **Single Source of Truth:** Never duplicate reference material. If a template is needed, hide it behind a context pointer.

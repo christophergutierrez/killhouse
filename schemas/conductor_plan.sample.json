@@ -1,0 +1,40 @@
+{
+  "plan_id": "demo-slugify",
+  "target_branch": "conduct/demo",
+  "delegations": [
+    {
+      "delegation_id": "slice-1.planner",
+      "plan_position": "phase-1/milestone-1/slice-1-plan",
+      "depends_on": [],
+      "resolved_prompt": "You are the Lead Planner. Design a plan for implementing the slugify function with acceptance criteria and risk assessment.",
+      "planned_tier": "fast",
+      "gate": {
+        "command": "python3 -m unittest tests.test_plan_slugify -v",
+        "cwd": "REPO_ROOT",
+        "pass_criteria": "exit code == 0 and unittest reports OK",
+        "baseline_polarity": "fail"
+      },
+      "upstream_artifacts": [
+        {"kind": "repository_state", "pinned": {"head": "abc123def456", "branch": "main", "dirty_files": []}},
+        {"kind": "acceptance_criteria", "path": "specs/slugify.md"}
+      ]
+    },
+    {
+      "delegation_id": "slice-1.implementer",
+      "plan_position": "phase-1/milestone-1/slice-1-impl",
+      "depends_on": ["slice-1.planner"],
+      "resolved_prompt": "You are the Implementer. Follow the plan and implement the slugify function to pass the acceptance test.",
+      "planned_tier": "standard",
+      "gate": {
+        "command": "python3 -m unittest tests.test_probe_slugify -v",
+        "cwd": "REPO_ROOT",
+        "pass_criteria": "exit code == 0 and unittest reports OK with 0 failures",
+        "baseline_polarity": "fail"
+      },
+      "upstream_artifacts": [
+        {"kind": "repository_state", "pinned": {"head": "abc123def456", "branch": "main", "dirty_files": []}},
+        {"kind": "plan_artifact", "path": ".killhouse/delegations.jsonl", "delegation_id": "slice-1.planner"}
+      ]
+    }
+  ]
+}

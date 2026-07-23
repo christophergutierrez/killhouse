@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://killhouse.dev/schemas/conductor_plan.schema.json",
+  "title": "Killhouse conductor plan",
+  "description": "A conductor plan: deterministic instructions for executing a delegation DAG. Fields mirror the frozen half of delegation_record (plan_position, depends_on, resolved_prompt, gate, upstream_artifacts), prefixed with plan_id and target_branch.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["plan_id", "target_branch", "delegations"],
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this plan."
+    },
+    "target_branch": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Branch name where delegations will be executed and committed."
+    },
+    "delegations": {
+      "type": "array",
+      "minItems": 1,
+      "description": "List of delegations to execute in topological order.",
+      "items": {
+        "type": "object",
+        "required": [
+          "delegation_id",
+          "plan_position",
+          "depends_on",
+          "resolved_prompt",
+          "planned_tier",
+          "gate",
+          "upstream_artifacts"
+        ],
+        "properties": {
+          "delegation_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique identifier for this delegation within the plan."
+          },
+          "plan_position": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Position in the plan hierarchy (e.g. phase-1/milestone-1/slice-1)."
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "delegation_ids this delegation depends on. May be empty.",
+            "items": {"type": "string"}
+          },
+          "resolved_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The resolved prompt for this delegation."
+          },
+          "planned_tier": {
+            "type": "string",
+            "enum": ["fast", "standard", "reasoning"],
+            "description": "The planned execution tier for this delegation."
+          },
+          "gate": {
+            "type": "object",
+            "description": "The verification gate for this delegation's output.",
+            "required": ["command", "cwd", "pass_criteria", "baseline_polarity"],
+            "properties": {
+              "command": {"type": "string", "minLength": 1},
+              "cwd": {"type": "string", "minLength": 1},
+              "pass_criteria": {"type": "string", "minLength": 1},
+              "baseline_polarity": {"type": "string", "enum": ["pass", "fail"]}
+            }
+          },
+          "upstream_artifacts": {
+            "type": "array",
+            "description": "Resolved inputs consumed by this delegation.",
+            "items": {
+              "type": "object",
+              "required": ["kind"],
+              "properties": {
+                "kind": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

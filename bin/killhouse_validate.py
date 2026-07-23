@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import killhouse_conduct as kc
 import killhouse_delegation_log as dl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -296,6 +297,25 @@ def check_redqueen() -> None:
     contains("bin/evolve_exec_prompt.py", "--mock always exits 0")
 
 
+def check_conductor() -> None:
+    # The schema is the single source of truth; it must load and the canonical sample must satisfy it.
+    schema = kc.load_plan_schema()
+    sample = json.loads((ROOT / "schemas/conductor_plan.sample.json").read_text())
+    errors = kc.validate_plan(sample, schema)
+    require(not errors, f"sample conductor plan fails schema: {errors}")
+
+    missing_target = json.loads(json.dumps(sample))
+    del missing_target["target_branch"]
+    require(
+        kc.validate_plan(missing_target, schema),
+        "conductor schema must reject plan without target_branch",
+    )
+
+    contains("loops/CONDUCT.md", "conductor_plan.schema.json")
+    contains("loops/CONDUCT.md", "escalation")
+    contains("AGENTS.md", "CONDUCT.md")
+
+
 CHECKS = {
     "manifests": check_manifests,
     "model-config": check_model_config,
@@ -309,6 +329,7 @@ CHECKS = {
     "adr-convention": check_adr_convention,
     "validate-loop": check_validate_loop,
     "redqueen": check_redqueen,
+    "conductor": check_conductor,
 }
 
 

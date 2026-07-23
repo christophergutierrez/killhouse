@@ -112,6 +112,7 @@ the runtime, record `model_routing: unavailable`.
 - Before each delegation, append a delegation record per `loops/DELEGATION_LOG.md` for
   routing-calibration data. This is data collection only: it never changes tier selection and never
   gates or blocks a delegation. The log is a git-ignored artifact, never echoed into this session.
+  For headless plan execution without orchestration, the standalone conductor (`bin/killhouse_conduct.py`) writes records mechanically using the same schema and semantics.
 
 ## Mandatory gates (never skipped, in either mode)
 

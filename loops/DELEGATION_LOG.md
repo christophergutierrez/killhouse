@@ -114,6 +114,10 @@ Append records to `KILLHOUSE_DELEGATION_LOG` if set, otherwise `.killhouse/deleg
 is run data, not source: it is git-ignored. This protocol operates on **real runs**, never a dry-run
 mode — the escalation labels only mean something when they come from live tier decisions.
 
+When a run is driven by the conductor (`bin/killhouse_conduct.py` + `loops/CONDUCT.md`), records are
+written by code, not by the orchestrator following this protocol. The schema and semantics are
+identical; the difference is mechanical enforcement instead of orchestrator discipline.
+
 ### Validation
 
 `python3 bin/killhouse_delegation_log.py --validate <log.jsonl>` checks every record against the schema
