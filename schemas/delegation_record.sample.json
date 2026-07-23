@@ -4,12 +4,30 @@
   "depends_on": ["plan.add-slugify.lead-planner"],
   "resolved_prompt": "You are the Implementer in loops/IMPLEMENT_MILESTONE.md running one vertical slice under TDD. Milestone `add-slugify`: implement bin/_probe_slugify.py::slugify to satisfy the pinned acceptance test exactly. Red before green; edit only files in implementation_scope.",
   "chosen_tier": "fast",
+  "chosen_model": "example-fast-model",
   "tier_price": {"currency": "USD-per-Mtok", "basis": "illustrative", "input": 0.8, "output": 4.0},
   "decision_signals": {
     "source": "triage:trivial-fast-path",
     "task_tier": "light",
     "confidence": 0.95,
     "reasoning": "Single new pure function, additive-only, deterministic executable gate; cheapest capable tier under cost_optimized."
+  },
+  "routing_request": {
+    "contract_version": "delegation-routing.v1",
+    "source": "killhouse",
+    "delegation_boundary": "impl-milestone.add-slugify.slice-1.implementer",
+    "eligible_tiers": ["fast", "standard", "reasoning"],
+    "signals_snapshot": {"task_tier": "light", "execution_policy": "cost_optimized"}
+  },
+  "router_decision": {
+    "contract_version": "delegation-routing.v1",
+    "selected_tier": "fast",
+    "selected_model": "example-fast-model",
+    "fallback_ladder": ["standard", "reasoning"],
+    "routing_reason": "Bounded deterministic implementation with a single objective gate.",
+    "trace_id": "router-trace-example",
+    "policy_artifact_version": "policy-example",
+    "applied": true
   },
   "gate": {
     "command": "python3 -m unittest tests.test_probe_slugify -v",
@@ -18,7 +36,7 @@
     "baseline_polarity": "fail"
   },
   "upstream_artifacts": [
-    {"kind": "repository_state", "pinned": {"vcs": "git", "head": "79d449e612517390cd3a62da60416d9d0e2f36ce", "dirty_files": []}},
+    {"kind": "repository_state", "pinned": {"vcs": "git", "head": "79d449e612517390cd3a62da60416d9d0e2f36ce", "branch": "feature/add-slugify", "base_ref": "main", "dirty_files": []}},
     {"kind": "redqueen_prompt", "status": "absent"},
     {"kind": "pinned_acceptance_test", "path": "tests/test_probe_slugify.py", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
   ],

@@ -94,18 +94,71 @@ def git_worktree_sandbox(record: dict[str, Any], repo_root: Path = ROOT) -> Iter
     head = _pinned_head(record)
     base = Path(tempfile.mkdtemp(prefix="kh-replay-"))
     worktree = base / "wt"  # git worktree add requires a path that does not yet exist
+    linked_worktree = False
     try:
-        subprocess.run(
+        proc = subprocess.run(
             ["git", "-C", str(repo_root), "worktree", "add", "--detach", str(worktree), head],
-            check=True, capture_output=True, text=True,
-        )
-        yield worktree
-    finally:
-        subprocess.run(
-            ["git", "-C", str(repo_root), "worktree", "remove", "--force", str(worktree)],
             capture_output=True, text=True,
         )
+        if proc.returncode == 0:
+            linked_worktree = True
+        elif not _git_dir_writable(repo_root):
+            # `worktree add` writes metadata under repo_root/.git; a source repo that cannot
+            # accept that write (read-only mount, managed sandbox) needs the clone fallback
+            # instead. Detected by probing the actual git-dir, not by matching OS/locale error
+            # text, since git's message wording is not a stable contract.
+            _git_clone_sandbox(repo_root, worktree, head)
+        else:
+            raise subprocess.CalledProcessError(
+                proc.returncode,
+                proc.args,
+                output=proc.stdout,
+                stderr=proc.stderr,
+            )
+        yield worktree
+    finally:
+        if linked_worktree:
+            subprocess.run(
+                ["git", "-C", str(repo_root), "worktree", "remove", "--force", str(worktree)],
+                capture_output=True, text=True,
+            )
         shutil.rmtree(base, ignore_errors=True)
+
+
+def _git_dir_writable(repo_root: Path) -> bool:
+    """Probe whether git can write worktree metadata into repo_root's actual git-dir."""
+    proc = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "--git-dir"],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        return False
+    git_dir = Path(proc.stdout.strip())
+    if not git_dir.is_absolute():
+        git_dir = repo_root / git_dir
+    probe = git_dir / f".kh-replay-write-probe-{os.getpid()}"
+    try:
+        probe.write_text("")
+    except OSError:
+        return False
+    probe.unlink()
+    return True
+
+
+def _git_clone_sandbox(repo_root: Path, target: Path, head: str) -> None:
+    """Fallback for managed sandboxes where the source repo cannot write .git/worktrees."""
+    subprocess.run(
+        ["git", "clone", "--shared", "--no-checkout", str(repo_root), str(target)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(target), "checkout", "--detach", head],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def _pinned_head(record: dict[str, Any]) -> str:

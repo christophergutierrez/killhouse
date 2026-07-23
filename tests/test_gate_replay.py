@@ -1,4 +1,6 @@
+import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -165,6 +167,66 @@ class GateReplayWorktreeTests(unittest.TestCase):
 
         result = gr.replay(record, "fast", routing=ROUTING, executor=executor)  # default sandbox
         self.assertEqual(result.verdict, "PASS", result.reason)
+
+
+@contextmanager
+def temp_git_repo():
+    """A small standalone git repo with one commit, for exercising the real sandbox helpers."""
+    d = Path(tempfile.mkdtemp(prefix="kh-replay-source-"))
+    try:
+        subprocess.run(["git", "init", "-q", str(d)], check=True, capture_output=True, text=True)
+        subprocess.run(["git", "-C", str(d), "config", "user.email", "test@example.com"], check=True)
+        subprocess.run(["git", "-C", str(d), "config", "user.name", "Test"], check=True)
+        (d / "file.txt").write_text("hello\n")
+        subprocess.run(["git", "-C", str(d), "add", "file.txt"], check=True, capture_output=True)
+        subprocess.run(
+            ["git", "-C", str(d), "commit", "-q", "-m", "initial"], check=True, capture_output=True
+        )
+        yield d
+    finally:
+        # The read-only test below may leave .git non-writable; restore before removing.
+        git_dir = d / ".git"
+        if git_dir.is_dir():
+            os.chmod(git_dir, 0o755)
+        shutil.rmtree(d, ignore_errors=True)
+
+
+class GateReplayWorktreeFallbackTests(unittest.TestCase):
+    """git_worktree_sandbox falls back to a clone when the source repo's .git is not writable."""
+
+    @unittest.skipIf(os.name != "posix", "permission-bit probe requires POSIX")
+    @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0, "root bypasses permission bits")
+    def test_falls_back_to_clone_when_git_dir_is_read_only(self):
+        with temp_git_repo() as source_repo:
+            head = subprocess.run(
+                ["git", "-C", str(source_repo), "rev-parse", "HEAD"],
+                capture_output=True, text=True,
+            ).stdout.strip()
+            record = {"upstream_artifacts": [{"kind": "repository_state", "pinned": {"head": head}}]}
+
+            git_dir = source_repo / ".git"
+            mode = git_dir.stat().st_mode
+            os.chmod(git_dir, mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+            try:
+                with gr.git_worktree_sandbox(record, repo_root=source_repo) as sandbox:
+                    self.assertTrue((sandbox / "file.txt").is_file())
+                    # A clone gets its own real .git directory; a linked worktree gets a .git
+                    # *file* pointing back at the source repo.
+                    self.assertTrue((sandbox / ".git").is_dir())
+            finally:
+                os.chmod(git_dir, mode)
+
+    def test_raises_when_worktree_add_fails_for_a_non_permission_reason(self):
+        with temp_git_repo() as source_repo:
+            bogus_head = "0" * 40
+            record = {
+                "upstream_artifacts": [
+                    {"kind": "repository_state", "pinned": {"head": bogus_head}}
+                ]
+            }
+            with self.assertRaises(subprocess.CalledProcessError):
+                with gr.git_worktree_sandbox(record, repo_root=source_repo):
+                    pass
 
 
 if __name__ == "__main__":

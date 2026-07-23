@@ -19,6 +19,10 @@ __pycache__/
 # Local agent/runtime artifacts
 .flocode/
 
+# Pipeline run artifacts (recreated by the PLAN loop) and local working notes
+implementation-plan.md
+tmp/
+
 # Tooling caches
 .mypy_cache/
 .ruff_cache/

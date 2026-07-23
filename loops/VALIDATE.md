@@ -61,7 +61,9 @@ Canonical machine-readable form is snake_case. Title Case is allowed in the huma
 
 - `confirmed`: executable source evidence found for the ADR's terms or bridged patterns.
 - `drift`: a direct contradiction: the ADR declares concrete forbidden terms/patterns and they
-  appear in executable source. Blocking only when the ADR is `shipped` + `load_bearing: true`.
+  appear in executable source. A shipped, load-bearing ADR with no source evidence is also drift,
+  because the implementation was expected but cannot be found. Blocking only when the ADR is
+  `shipped` + `load_bearing: true`.
 - `needs_input`: no evidence found and the ADR's implementation status is `unknown` or `partial`.
   Surface to the human: is this planned, partially implemented, or conceptual-only?
 - `expected_gap`: no evidence found and the ADR is marked `planned`. Not drift, not noise.
@@ -102,7 +104,9 @@ evidence:
    - `conceptual` to `not_applicable`.
    - `planned` to `expected_gap`.
    - `partial` or `unknown` to `needs_input`.
-   - `shipped` to `needs_input` (or `drift` if a forbidden term is found in source).
+   - `shipped` + `load_bearing: true` to `drift` when source evidence is absent or a forbidden term is
+     found in source.
+   - other `shipped` ADRs to `needs_input` when source evidence is absent.
 
 Then two advisory passes (lower confidence bar, surface possibilities):
 
@@ -176,8 +180,9 @@ For `report-and-file` mode, pass `--out <path>`:
 python3 bin/adr_drift.py --adrs docs/adr/ --source-root . --mode report-and-file --out TODO/adr-drift-findings/
 ```
 
-The helper emits JSON to stdout (`report`) or writes to `--out` (`report-and-file`). The loop
-consumes that JSON and applies the judgment layer.
+The helper emits JSON to stdout (`report`). In `report-and-file`, `--out` may be a JSON file path or a
+directory; directory output writes `adr-drift-report.json` plus one Markdown file per drift finding.
+The loop consumes the JSON report and applies the judgment layer.
 
 ## Degradation
 

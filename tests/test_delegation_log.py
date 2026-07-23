@@ -23,9 +23,9 @@ class RecordSchemaTests(unittest.TestCase):
     def test_canonical_sample_is_valid(self):
         self.assertEqual(dl.validate_record(sample()), [])
 
-    def test_missing_any_top_level_field_fails(self):
+    def test_missing_any_required_top_level_field_fails(self):
         record = sample()
-        for field in list(record):
+        for field in dl.load_schema()["required"]:
             broken = copy.deepcopy(record)
             del broken[field]
             errors = dl.validate_record(broken)
@@ -34,6 +34,12 @@ class RecordSchemaTests(unittest.TestCase):
                 any(f"missing required field '{field}'" in e for e in errors),
                 f"error for missing '{field}' not reported: {errors}",
             )
+
+    def test_optional_router_fields_may_be_absent(self):
+        record = sample()
+        for field in ("chosen_model", "routing_request", "router_decision"):
+            record.pop(field, None)
+        self.assertEqual(dl.validate_record(record), [])
 
     def test_missing_gate_cwd_fails(self):
         # Gate 0 finding: replay fidelity depends on the gate's cwd, so it is required.
@@ -51,9 +57,43 @@ class RecordSchemaTests(unittest.TestCase):
 
     def test_repository_state_without_head_fails(self):
         broken = sample()
-        broken["upstream_artifacts"] = [{"kind": "repository_state", "pinned": {"vcs": "git"}}]
+        broken["upstream_artifacts"] = [
+            {"kind": "repository_state", "pinned": {"vcs": "git", "dirty_files": []}}
+        ]
         errors = dl.validate_record(broken)
         self.assertTrue(any("contains" in e for e in errors), errors)
+
+    def test_repository_state_without_dirty_files_fails(self):
+        broken = sample()
+        repo_state = next(item for item in broken["upstream_artifacts"] if item["kind"] == "repository_state")
+        del repo_state["pinned"]["dirty_files"]
+        errors = dl.validate_record(broken)
+        self.assertTrue(any("contains" in e for e in errors), errors)
+
+    def test_dirty_file_requires_replay_content(self):
+        broken = sample()
+        repo_state = next(item for item in broken["upstream_artifacts"] if item["kind"] == "repository_state")
+        repo_state["pinned"]["dirty_files"] = [{"path": "changed.py", "status": "modified"}]
+        errors = dl.validate_record(broken)
+        self.assertTrue(any("requires pinned_content or content_artifact" in e for e in errors), errors)
+
+    def test_deleted_dirty_file_needs_no_content(self):
+        record = sample()
+        repo_state = next(item for item in record["upstream_artifacts"] if item["kind"] == "repository_state")
+        repo_state["pinned"]["dirty_files"] = [{"path": "removed.py", "status": "deleted"}]
+        self.assertEqual(dl.validate_record(record), [])
+
+    def test_applied_router_decision_must_match_chosen_tier(self):
+        broken = sample()
+        broken["router_decision"]["selected_tier"] = "reasoning"
+        errors = dl.validate_record(broken)
+        self.assertTrue(any("selected_tier to equal chosen_tier" in e for e in errors), errors)
+
+    def test_unapplied_router_decision_requires_fallback_reason(self):
+        broken = sample()
+        broken["router_decision"]["applied"] = False
+        errors = dl.validate_record(broken)
+        self.assertTrue(any("fallback_reason" in e for e in errors), errors)
 
     def test_escalated_outcome_requires_magnitude_and_trigger(self):
         broken = sample()

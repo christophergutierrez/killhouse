@@ -9,8 +9,10 @@ Stdlib-only. Deterministic for the same tree + inputs.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
+import tokenize
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 _EXECUTABLE_EXTS = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs", ".java", ".rb", ".sh"}
 _DOCS_EXTS = {".md", ".txt", ".rst"}
+_COMMENT_PREFIXES = ("#", "//", "/*", "*", "*/")
 
 
 def _read_frontmatter(text: str) -> tuple[dict[str, str], str]:
@@ -87,6 +90,35 @@ def _is_docs(path: Path) -> bool:
     return path.suffix in _DOCS_EXTS
 
 
+def _source_search_text(path: Path, text: str) -> str:
+    """Return source text with comments removed where we can do that cheaply."""
+    if path.suffix == ".py":
+        try:
+            tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+            return " ".join(
+                token.string
+                for token in tokens
+                if token.type not in {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE}
+            )
+        except tokenize.TokenError:
+            return "\n".join(_strip_comment_lines(text.splitlines()))
+    return "\n".join(_strip_comment_lines(text.splitlines()))
+
+
+def _strip_comment_lines(lines: list[str]) -> list[str]:
+    out: list[str] = []
+    for line in lines:
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith(_COMMENT_PREFIXES):
+            continue
+        out.append(line)
+    return out
+
+
+def _matches_source(path: Path, text: str, needle: str) -> bool:
+    return needle in _source_search_text(path, text)
+
+
 def _search_needles(adr: dict[str, Any], context_docs: list[str]) -> list[str]:
     """Build search needles from ADR title/terms + context-doc bridging terms."""
     needles: list[str] = []
@@ -130,12 +162,15 @@ def search_evidence(
         except (UnicodeDecodeError, OSError):
             continue
         for needle in needles:
-            if needle and needle in text:
-                entry = {"file": str(path), "needle": needle}
-                if _is_executable_source(path):
+            if not needle:
+                continue
+            if _is_executable_source(path):
+                if _matches_source(path, text, needle):
+                    entry = {"file": str(path), "needle": needle}
                     source_evidence.append(entry)
-                elif _is_docs(path):
-                    docs_evidence.append(entry)
+            elif _is_docs(path) and needle in text:
+                entry = {"file": str(path), "needle": needle}
+                docs_evidence.append(entry)
     return source_evidence, docs_evidence
 
 
@@ -161,6 +196,8 @@ def classify(
         and _forbidden_in_source(adr, source_evidence)
     ):
         return "drift"
+    if impl == "shipped" and adr.get("load_bearing", "unknown") == "true" and not source_evidence:
+        return "drift"
     if source_evidence:
         return "confirmed"
     return "needs_input"
@@ -173,6 +210,29 @@ def _forbidden_in_source(adr: dict[str, Any], source_evidence: list[dict[str, An
         if entry.get("needle") in forbidden:
             return True
     return False
+
+
+def draft_conflicts(
+    source_root: Path, adrs: list[dict[str, Any]], context_docs: list[str]
+) -> list[dict[str, Any]]:
+    """Return advisory conflicts for non-accepted ADRs with forbidden terms in source."""
+    findings: list[dict[str, Any]] = []
+    for adr in adrs:
+        if adr.get("status") == "accepted" or not adr.get("forbidden_terms"):
+            continue
+        source_ev, _ = search_evidence(adr, source_root, context_docs)
+        if not _forbidden_in_source(adr, source_ev):
+            continue
+        findings.append(
+            {
+                "id": f"draft-conflict-{adr['id']}",
+                "title": adr["title"],
+                "bucket": "draft_adr_conflicts",
+                "evidence": {"source": source_ev, "docs": []},
+                "reason": "non-accepted ADR forbidden term already appears in source (advisory)",
+            }
+        )
+    return findings
 
 
 def reverse_scan(
@@ -222,14 +282,17 @@ def reverse_scan(
         for pattern in unique_patterns:
             if pattern in covered:
                 continue
-            if pattern in text:
+            if _matches_source(path, text, pattern):
                 findings.append(
                     {
                         "id": f"undocumented-{path.stem}-{pattern}",
                         "title": pattern,
                         "bucket": "undocumented",
                         "evidence": {"source": [{"file": str(path), "needle": pattern}], "docs": []},
-                        "reason": f"load-bearing pattern '{pattern}' in source with no covering ADR (advisory)",
+                        "reason": (
+                            f"load-bearing pattern '{pattern}' in source with no covering ADR "
+                            "(advisory)"
+                        ),
                     }
                 )
     return findings
@@ -244,8 +307,7 @@ def main() -> int:
     parser.add_argument("--out", help="Output path for report-and-file mode")
     args = parser.parse_args()
 
-    adr_paths = sorted(Path().glob(args.adrs)) if "*" in args.adrs else [Path(args.adrs)]
-    adr_paths = [p for p in adr_paths if p.exists()]
+    adr_paths = _resolve_adr_paths(args.adrs)
     source_root = Path(args.source_root)
 
     results: list[dict[str, Any]] = []
@@ -268,7 +330,8 @@ def main() -> int:
             }
         )
 
-    # Advisory reverse scan: undocumented load-bearing patterns (non-blocking in v1).
+    # Advisory passes (non-blocking in v1).
+    results.extend(draft_conflicts(source_root, parsed_adrs, args.context_docs))
     results.extend(reverse_scan(source_root, parsed_adrs, args.context_docs))
 
     output = json.dumps(results, indent=2)
@@ -276,10 +339,45 @@ def main() -> int:
         if not args.out:
             print("error: --out required for report-and-file mode", file=sys.stderr)
             return 1
-        Path(args.out).write_text(output)
+        _write_report(Path(args.out), output, results)
     else:
         print(output)
     return 0
+
+
+def _resolve_adr_paths(pattern: str) -> list[Path]:
+    path = Path(pattern)
+    if path.is_dir():
+        return sorted(p for p in path.rglob("*.md") if p.is_file())
+    if any(ch in pattern for ch in "*?[]"):
+        return sorted(p for p in Path().glob(pattern) if p.is_file())
+    return [path] if path.is_file() else []
+
+
+def _write_report(out: Path, output: str, results: list[dict[str, Any]]) -> None:
+    if out.suffix:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(output)
+        return
+
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "adr-drift-report.json").write_text(output)
+    for index, result in enumerate(results, start=1):
+        if result.get("bucket") != "drift":
+            continue
+        slug = _slug(result.get("id") or f"drift-{index}")
+        (out / f"{index:03d}-{slug}.md").write_text(
+            "# ADR drift finding\n\n"
+            f"- ADR: {result.get('id', '<unknown>')}\n"
+            f"- Title: {result.get('title', '')}\n"
+            f"- Bucket: {result.get('bucket')}\n"
+            f"- Reason: {result.get('reason', '')}\n"
+        )
+
+
+def _slug(value: Any) -> str:
+    text = "".join(ch.lower() if ch.isalnum() else "-" for ch in str(value))
+    return "-".join(part for part in text.split("-") if part) or "finding"
 
 
 def _reason(
@@ -295,6 +393,10 @@ def _reason(
         return "planned ADR with no source evidence: absence is expected"
     if bucket == "confirmed":
         return f"{impl} ADR with source evidence found"
+    if bucket == "drift":
+        if adr.get("load_bearing") == "true" and not source_ev:
+            return "shipped load-bearing ADR has no source evidence: drift"
+        return "shipped load-bearing ADR contradiction found in source: drift"
     if bucket == "needs_input":
         return f"{impl} ADR with no source evidence: needs input"
     return bucket

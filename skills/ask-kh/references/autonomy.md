@@ -53,3 +53,16 @@ Quality is held constant by gates and review. The policy only chooses the route 
 **`cost_optimized`** (default) — prefer the cheapest capable tier for bounded work. Escalate only after evidence: failed gates, repeated same failure, scope expansion, security/architecture uncertainty, or reviewer rejection. Reasoning-tier agents write file contracts; standard-tier handles routine contract review; cheaper tiers write first-pass production code.
 
 **`time_optimized`** — prefer stronger tiers earlier to reduce wall-clock retries. Still delegate mechanical checks and independent review to cheaper tiers where safe. Reasoning-tier production-code edits still require an explicit rescue, safety, or cross-cutting refactor exception.
+
+---
+
+## Branching mode
+
+If granular branching is available, choose it at the same post-grill gate as autonomy and execution
+policy. The plan owns natural branch/PR breakpoints, usually milestone boundaries with objective gates.
+
+Autopilot may create and move through planned branches only when the breakpoints, gates, and handoff
+state are already recorded in the PRD or `implementation-plan.md`. An unplanned branch split that changes
+scope, commit behavior, stop conditions, or replay inputs is a genuinely unforeseen decision: degrade to
+Checkpoint mode and ask. Delegation records must pin repository state and consumed artifacts on the
+branch where the delegation actually ran.

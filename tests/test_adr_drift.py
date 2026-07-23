@@ -73,6 +73,21 @@ class TestSeededContradictionDrift(unittest.TestCase):
         data = json.loads(out)
         self.assertEqual(data[0]["bucket"], "drift")
 
+    def test_shipped_load_bearing_without_source_is_drift(self):
+        with tempfile.TemporaryDirectory() as d:
+            adr = _write(
+                Path(d) / "adr-0001.md",
+                "---\nimplementation: shipped\nload_bearing: true\n---\n\n# Coarse write API\n\n"
+                "All writes go through the coarse API.\n",
+            )
+            _write(Path(d) / "src" / "app.py", "def direct_write():\n    pass\n")
+            rc, out, _ = _run_cli(
+                "--adrs", str(adr), "--source-root", str(Path(d) / "src"), "--mode", "report"
+            )
+        self.assertEqual(rc, 0)
+        data = json.loads(out)
+        self.assertEqual(data[0]["bucket"], "drift")
+
 
 class TestUndocumentedPattern(unittest.TestCase):
     """Load-bearing code pattern with no covering ADR -> undocumented (advisory)."""
@@ -123,6 +138,20 @@ class TestDocsOnlyNotConfirmed(unittest.TestCase):
         self.assertEqual(data[0]["bucket"], "needs_input")
         self.assertNotEqual(data[0]["bucket"], "confirmed")
 
+    def test_python_comment_only_match_is_needs_input(self):
+        with tempfile.TemporaryDirectory() as d:
+            adr = _write(
+                Path(d) / "adr-0001.md",
+                "---\nimplementation: shipped\n---\n\n# Use SQLite\n\nWe use SQLite.\n",
+            )
+            _write(Path(d) / "src" / "app.py", "# Use SQLite\n")
+            rc, out, _ = _run_cli(
+                "--adrs", str(adr), "--source-root", str(Path(d) / "src"), "--mode", "report"
+            )
+        self.assertEqual(rc, 0)
+        data = json.loads(out)
+        self.assertEqual(data[0]["bucket"], "needs_input")
+
 
 class TestSourceMatchConfirmed(unittest.TestCase):
     """shipped + source evidence -> confirmed."""
@@ -133,7 +162,7 @@ class TestSourceMatchConfirmed(unittest.TestCase):
                 Path(d) / "adr-0001.md",
                 "---\nimplementation: shipped\n---\n\n# Use SQLite\n\nWe use SQLite.\n",
             )
-            _write(Path(d) / "src" / "app.py", "import sqlite3\n# Use SQLite\n")
+            _write(Path(d) / "src" / "app.py", 'DECISION = "Use SQLite"\n')
             rc, out, _ = _run_cli(
                 "--adrs", str(adr), "--source-root", str(Path(d) / "src"), "--mode", "report"
             )
@@ -177,7 +206,9 @@ class TestJsonOutput(unittest.TestCase):
         data = json.loads(out)
         self.assertEqual(len(data), 1)
         entry = data[0]
-        for field in ("id", "title", "status", "implementation", "load_bearing", "bucket", "evidence", "reason"):
+        for field in (
+            "id", "title", "status", "implementation", "load_bearing", "bucket", "evidence", "reason"
+        ):
             self.assertIn(field, entry)
         self.assertIn("source", entry["evidence"])
         self.assertIn("docs", entry["evidence"])
@@ -198,6 +229,47 @@ class TestJsonOutput(unittest.TestCase):
             self.assertEqual(rc, 0)
             data = json.loads(out_path.read_text())
             self.assertEqual(data[0]["bucket"], "expected_gap")
+
+    def test_directory_adrs_are_discovered(self):
+        with tempfile.TemporaryDirectory() as d:
+            adr_dir = Path(d) / "docs" / "adr"
+            _write(adr_dir / "0001-sqlite.md", "# Use SQLite\n\nBody.\n")
+            _write(Path(d) / "src" / "app.py", "import sqlite3\n")
+            rc, out, _ = _run_cli(
+                "--adrs", str(adr_dir), "--source-root", str(Path(d) / "src"), "--mode", "report"
+            )
+        self.assertEqual(rc, 0)
+        data = json.loads(out)
+        self.assertEqual([entry["id"] for entry in data], ["0001-sqlite"])
+
+    def test_missing_adr_directory_is_empty_report(self):
+        with tempfile.TemporaryDirectory() as d:
+            rc, out, _ = _run_cli(
+                "--adrs", str(Path(d) / "docs" / "adr"),
+                "--source-root", str(Path(d)),
+                "--mode", "report",
+            )
+        self.assertEqual(rc, 0)
+        self.assertEqual(json.loads(out), [])
+
+    def test_report_and_file_directory_writes_report_and_drift_finding(self):
+        with tempfile.TemporaryDirectory() as d:
+            adr = _write(
+                Path(d) / "adr-0001.md",
+                "---\nimplementation: shipped\nload_bearing: true\nforbidden_terms: mysql\n---\n\n"
+                "# Use SQLite\n",
+            )
+            _write(Path(d) / "src" / "app.py", "import mysql\n")
+            out_dir = Path(d) / "TODO" / "findings"
+            rc, _, _ = _run_cli(
+                "--adrs", str(adr),
+                "--source-root", str(Path(d) / "src"),
+                "--mode", "report-and-file",
+                "--out", str(out_dir),
+            )
+            self.assertEqual(rc, 0)
+            self.assertTrue((out_dir / "adr-drift-report.json").is_file())
+            self.assertTrue(list(out_dir.glob("*.md")))
 
 
 class TestFrontmatterDefaults(unittest.TestCase):
@@ -239,6 +311,26 @@ class TestFrontmatterDefaults(unittest.TestCase):
             )
             result = adr_drift.parse_adr(adr)
         self.assertEqual(result["forbidden_terms"], ["sqlalchemy", "peewee"])
+
+
+class TestDraftAdrConflicts(unittest.TestCase):
+    """non-accepted ADR forbidden term in source -> draft_adr_conflicts."""
+
+    def test_draft_adr_conflict_reported(self):
+        with tempfile.TemporaryDirectory() as d:
+            adr = _write(
+                Path(d) / "adr-0001.md",
+                "---\nstatus: proposed\nimplementation: planned\nforbidden_terms: direct_write\n---\n\n"
+                "# Coarse write API\n",
+            )
+            _write(Path(d) / "src" / "app.py", "def direct_write():\n    pass\n")
+            rc, out, _ = _run_cli(
+                "--adrs", str(adr), "--source-root", str(Path(d) / "src"), "--mode", "report"
+            )
+        self.assertEqual(rc, 0)
+        data = json.loads(out)
+        conflicts = [entry for entry in data if entry["bucket"] == "draft_adr_conflicts"]
+        self.assertEqual(len(conflicts), 1)
 
 
 if __name__ == "__main__":

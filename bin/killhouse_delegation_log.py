@@ -98,7 +98,59 @@ def _errors(instance: Any, schema: dict[str, Any], path: str) -> list[str]:
 
 def validate_record(record: Any, schema: dict[str, Any] | None = None) -> list[str]:
     """Return the list of schema violations for one record (empty means valid)."""
-    return _errors(record, schema if schema is not None else load_schema(), "")
+    return _errors(record, schema if schema is not None else load_schema(), "") + _semantic_errors(record)
+
+
+def _semantic_errors(record: Any) -> list[str]:
+    """Validate replay semantics that the lightweight JSON Schema subset cannot express."""
+    if not isinstance(record, dict):
+        return []
+
+    out: list[str] = []
+    router_decision = record.get("router_decision")
+    if isinstance(router_decision, dict):
+        applied = router_decision.get("applied")
+        selected = router_decision.get("selected_tier")
+        chosen = record.get("chosen_tier")
+        if applied is True and selected != chosen:
+            out.append("router_decision.applied=true requires selected_tier to equal chosen_tier")
+        if applied is False and not router_decision.get("fallback_reason"):
+            out.append("router_decision.applied=false requires fallback_reason")
+
+    for index, artifact in enumerate(record.get("upstream_artifacts", [])):
+        if not isinstance(artifact, dict) or artifact.get("kind") != "repository_state":
+            continue
+        pinned = artifact.get("pinned")
+        if not isinstance(pinned, dict):
+            continue
+        dirty_files = pinned.get("dirty_files")
+        if not isinstance(dirty_files, list):
+            continue
+        for dirty_index, dirty in enumerate(dirty_files):
+            if not isinstance(dirty, dict):
+                continue
+            status = dirty.get("status")
+            if status == "deleted":
+                continue
+            has_inline_content = (
+                isinstance(dirty.get("pinned_content"), str)
+                and bool(dirty["pinned_content"])
+            )
+            artifact_ref = dirty.get("content_artifact")
+            has_artifact_ref = (
+                isinstance(artifact_ref, dict)
+                and isinstance(artifact_ref.get("path"), str)
+                and bool(artifact_ref["path"])
+                and isinstance(artifact_ref.get("sha256"), str)
+                and bool(artifact_ref["sha256"])
+            )
+            if not has_inline_content and not has_artifact_ref:
+                out.append(
+                    "upstream_artifacts"
+                    f"[{index}].pinned.dirty_files[{dirty_index}] requires pinned_content "
+                    "or content_artifact unless status is deleted"
+                )
+    return out
 
 
 def load_records(log_path: Path) -> list[dict[str, Any]]:

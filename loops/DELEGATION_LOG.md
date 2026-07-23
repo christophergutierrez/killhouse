@@ -41,8 +41,15 @@ The list below is a **non-normative reading guide**; when it disagrees with the 
 
 - `delegation_id`, `plan_position`, `depends_on` — identity and which prior delegations it consumed.
 - `resolved_prompt` — the prompt sent to the subagent, **verbatim**.
-- `chosen_tier`, `tier_price` — the tier and its price basis (see Pricing), not just the tier's identity.
+- `chosen_tier`, `chosen_model`, `tier_price` — the actual executed tier/model and the tier's price
+  basis (see Pricing), not just the tier's identity. `chosen_model` is optional when the runtime does
+  not expose a concrete model id.
 - `decision_signals` — the classify/triage output plus the confidence and reasoning that drove the tier.
+- `routing_request` — optional future router-serving request metadata derived from the delegation
+  boundary. It is frozen before delegated output exists.
+- `router_decision` — optional future router-serving response metadata: selected tier/model, fallback
+  ladder, routing reason, trace id, policy artifact version, whether it was applied, and any fallback
+  reason.
 - `gate` — the exact verification command, its `cwd`, pass criteria, and baseline polarity.
 - `upstream_artifacts` — the resolved inputs consumed, enough to replay.
 - `outcome` — pass/fail, and if escalated, the magnitude (tiers jumped) and the triggering signal.
@@ -60,9 +67,9 @@ Write exactly **one** record per delegation, in two phases so the pre-decision f
 back-filled after the fact:
 
 1. **Freeze (before the subagent runs).** Capture `resolved_prompt`, `decision_signals`, `chosen_tier`,
-   `tier_price`, `gate`, `upstream_artifacts`, `plan_position`, `depends_on`, and `delegation_id` at the
-   boundary. These are the ground truth of *what was decided before seeing any output*; treat them as
-   immutable once frozen.
+   `tier_price`, optional `routing_request`, optional `router_decision`, `gate`, `upstream_artifacts`,
+   `plan_position`, `depends_on`, and `delegation_id` at the boundary. These are the ground truth of
+   *what was decided before seeing any output*; treat them as immutable once frozen.
 2. **Finalize (after the subagent returns).** Append `outcome`. A fired escalation is a ground-truth
    "guessed-too-low" label: record `escalation_magnitude` (tiers jumped) and `escalation_trigger`, not
    just the pass/fail bit.
@@ -81,6 +88,25 @@ HERMETIC probe (Gate 0) proved two capture requirements without which replay is 
 
 Anything else the delegation consumed (an evolved prompt, a plan milestone, a pinned acceptance test)
 goes in `upstream_artifacts` as a path plus a content hash, or as inlined pinned content when small.
+If the planner later chooses natural branch or PR breakpoints, each delegation record still pins the
+repository state for the branch it actually ran on. Record branch/base context when available, and never
+infer branch state from the current checkout during replay.
+
+### Router-serving contract
+
+Future router-serving integration belongs in two optional delegation-record fields:
+
+- `routing_request` records the client-side request metadata Killhouse built from the current
+  delegation boundary.
+- `router_decision` records the response Killhouse consumed: selected tier/model, fallback ladder,
+  routing reason, trace id, policy artifact version, whether it was applied, and any fallback reason.
+
+The router decision is advisory. A router can select a tier or model, but it cannot declare delegated
+work correct; only the logged gate and finalized `outcome` do that. `chosen_tier` records the actual
+executed tier. If `router_decision.applied` is true, `router_decision.selected_tier` must match
+`chosen_tier`; if it is false, record `fallback_reason`. Keep route-logic training labels, including
+`minimum_viable_tier`, out of Killhouse's live decision code. Those labels belong in routerescalation
+artifacts produced from replay and measurement, not in production orchestration.
 
 ### Where the log lives
 
@@ -90,8 +116,8 @@ mode — the escalation labels only mean something when they come from live tier
 
 ### Validation
 
-`bin/killhouse_delegation_log.py --validate <log.jsonl>` checks every record against the schema and
-exits non-zero if any required field is missing or malformed. The self-hosting validator
+`python3 bin/killhouse_delegation_log.py --validate <log.jsonl>` checks every record against the schema
+and exits non-zero if any required field is missing or malformed. The self-hosting validator
 (`bin/killhouse_validate.py --check delegation-logging`) enforces that the schema and sample stay valid
 and that this protocol is wired into the loops.
 
